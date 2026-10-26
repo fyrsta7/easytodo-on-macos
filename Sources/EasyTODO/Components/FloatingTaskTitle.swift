@@ -173,7 +173,7 @@ final class FloatingTaskTitleView: NSView {
 
         let sourceFrame = window.convertToScreen(convert(bounds, to: nil))
         let visibleFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? sourceFrame
-        let size = TaskTitlePreviewLayout.size(for: title, screenWidth: visibleFrame.width)
+        let size = TaskTitlePreviewLayout.size(for: title, screenWidth: visibleFrame.width, font: previewFont)
         let frame = TaskTitlePreviewLayout.frame(size: size, source: sourceFrame, screen: visibleFrame)
         let preview = panel ?? makePanel(size: size)
         preview.appearance = window.effectiveAppearance
@@ -194,6 +194,10 @@ final class FloatingTaskTitleView: NSView {
         panel.parent?.removeChildWindow(panel)
         panel.orderOut(nil)
         self.panel = nil
+    }
+
+    private var previewFont: NSFont {
+        .systemFont(ofSize: font.pointSize, weight: .medium)
     }
 
     private func makePanel(size: NSSize) -> NSPanel {
@@ -223,7 +227,7 @@ final class FloatingTaskTitleView: NSView {
         card.contentViewMargins = .zero
 
         let fullTitle = NSTextField(wrappingLabelWithString: title)
-        fullTitle.font = TaskTitlePreviewLayout.font
+        fullTitle.font = previewFont
         fullTitle.textColor = .labelColor
         fullTitle.lineBreakMode = .byCharWrapping
         fullTitle.maximumNumberOfLines = 0
@@ -251,7 +255,7 @@ enum TaskTitlePreviewLayout {
             || (title as NSString).size(withAttributes: [.font: font]).width > availableWidth + 1
     }
 
-    static func size(for title: String, screenWidth: CGFloat) -> NSSize {
+    static func size(for title: String, screenWidth: CGFloat, font: NSFont = TaskTitlePreviewLayout.font) -> NSSize {
         let maxWidth = min(400, max(72, screenWidth - 2 * (screenMargin + horizontalPadding)))
         let textWidth = min(maxWidth, max(72, ceil((title as NSString).size(withAttributes: [.font: font]).width)))
         let paragraph = NSMutableParagraphStyle()

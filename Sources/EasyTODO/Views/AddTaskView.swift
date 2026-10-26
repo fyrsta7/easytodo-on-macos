@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 struct AddTaskView: View {
+    @AppStorage(EasyTODOSettings.textScale) private var textScale = TextSize.defaultScale
     @Binding var title: String
     let focus: FocusState<Bool>.Binding
     var placeholder = "Add Task"
@@ -17,7 +18,7 @@ struct AddTaskView: View {
 
             TextField(placeholder, text: $title)
                 .textFieldStyle(.plain)
-                .font(.system(size: 15, weight: .regular, design: .default))
+                .font(.system(size: TextSize.scaled(15, by: textScale), weight: .regular, design: .default))
                 .focused(focus)
                 .onSubmit(onSubmit)
                 .onTapGesture(perform: activate)

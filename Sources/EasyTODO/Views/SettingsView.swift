@@ -7,6 +7,7 @@ struct SettingsView: View {
     @AppStorage(EasyTODOSettings.hiddenDockIcon) private var hiddenDockIcon = false
     @AppStorage(EasyTODOSettings.transparency) private var transparency = 0.80
     @AppStorage(EasyTODOSettings.theme) private var theme = ThemeOption.light.rawValue
+    @AppStorage(EasyTODOSettings.textScale) private var textScale = TextSize.defaultScale
 
     @State private var loginItemMessage: String?
 
@@ -28,6 +29,37 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+            }
+
+            Section("Text Size") {
+                HStack {
+                    Text("Size")
+                    Spacer()
+                    Text("\(Int((textScale * 100).rounded()))%")
+                        .monospacedDigit()
+                    Button("Reset") {
+                        textScale = TextSize.defaultScale
+                    }
+                    .disabled(abs(textScale - TextSize.defaultScale) < 0.001)
+                }
+
+                Slider(value: $textScale, in: TextSize.range, step: 0.05) {
+                    Text("Text size")
+                } minimumValueLabel: {
+                    Text("85%")
+                } maximumValueLabel: {
+                    Text("160%")
+                }
+                .accessibilityValue("\(Int((textScale * 100).rounded())) percent")
+
+                Text("Your tasks, easier to read · 待办事项")
+                    .font(.system(size: TextSize.scaled(15, by: textScale)))
+                    .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Applies to task lists, hover previews, widgets, and task inputs. Saved automatically.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Transparency") {
@@ -59,6 +91,10 @@ struct SettingsView: View {
         }
         .onChange(of: transparency) { _, _ in
             WindowManager.shared.applyWindowSettings()
+        }
+        .onChange(of: textScale) { _, _ in
+            MenuBarManager.shared.applyTextSize()
+            WidgetWindowManager.shared.applyTextSize()
         }
         .onChange(of: showMenuBar) { _, newValue in
             if !newValue {

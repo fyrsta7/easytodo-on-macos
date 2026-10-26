@@ -3,6 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct TodoListView: View {
+    @AppStorage(EasyTODOSettings.textScale) private var textScale = TextSize.defaultScale
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @Query(sort: [
@@ -67,10 +68,10 @@ struct TodoListView: View {
                                 .foregroundStyle(.secondary)
 
                             Text("No tasks for \(shortDate(for: selectedDate))")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: TextSize.scaled(14, by: textScale), weight: .semibold))
 
                             Text("Use the + button to plan this day.")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: TextSize.scaled(12, by: textScale), weight: .medium))
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
@@ -259,15 +260,15 @@ struct TodoListView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(headerTitle)
-                            .font(.system(size: 17, weight: .semibold, design: .default))
+                            .font(.system(size: TextSize.scaled(17, by: textScale), weight: .semibold, design: .default))
 
                         Image(systemName: "calendar")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.system(size: TextSize.scaled(12, by: textScale), weight: .semibold))
                             .foregroundStyle(.secondary)
                     }
 
                     Text("\(completedCount) / \(displayedTasks.count) complete - Open calendar")
-                        .font(.system(size: 12, weight: .medium, design: .default))
+                        .font(.system(size: TextSize.scaled(12, by: textScale), weight: .medium, design: .default))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -278,7 +279,7 @@ struct TodoListView: View {
 
             Button(action: showHeaderQuickAdd) {
                 Image(systemName: "plus")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: TextSize.scaled(14, by: textScale), weight: .semibold))
                     .frame(width: 32, height: 32)
                     .contentShape(Rectangle())
             }

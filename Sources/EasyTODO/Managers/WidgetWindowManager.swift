@@ -28,7 +28,7 @@ final class WidgetWindowManager {
             return
         }
 
-        let size = NSSize(width: 236, height: 312)
+        let size = TextSize.widgetSize(scale: TextSize.currentScale)
         let panel = WidgetPanel(
             contentRect: preferredFrame(size: size),
             styleMask: [.borderless, .fullSizeContentView, .nonactivatingPanel],
@@ -64,6 +64,18 @@ final class WidgetWindowManager {
 
     func applyWidgetTransparency() {
         widgetWindow?.alphaValue = widgetAlphaValue
+    }
+
+    func applyTextSize() {
+        guard let widgetWindow else { return }
+        let size = TextSize.widgetSize(scale: TextSize.currentScale)
+        let screen = widgetWindow.screen?.visibleFrame ?? preferredScreen().visibleFrame
+        let oldFrame = widgetWindow.frame
+        let origin = NSPoint(
+            x: max(screen.minX, min(oldFrame.minX, screen.maxX - size.width)),
+            y: max(screen.minY, min(oldFrame.maxY - size.height, screen.maxY - size.height))
+        )
+        widgetWindow.setFrame(NSRect(origin: origin, size: size), display: true)
     }
 
     func showContextMenu(for event: NSEvent, in panel: NSPanel) {

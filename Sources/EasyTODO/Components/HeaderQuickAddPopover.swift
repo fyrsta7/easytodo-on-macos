@@ -2,6 +2,7 @@
 import SwiftUI
 
 struct HeaderQuickAddPopover: View {
+    @AppStorage(EasyTODOSettings.textScale) private var textScale = TextSize.defaultScale
     @State private var title = ""
     @State private var focusRequest = 0
 
@@ -17,10 +18,11 @@ struct HeaderQuickAddPopover: View {
             QuickAddTaskTextField(
                 text: $title,
                 focusRequest: focusRequest,
+                fontSize: TextSize.scaled(14, by: textScale),
                 onSubmit: submitTitle,
                 onCancel: onCancel
             )
-            .frame(maxWidth: .infinity, minHeight: 24)
+            .frame(maxWidth: .infinity, minHeight: max(24, TextSize.rowHeight(baseFontSize: 14, scale: textScale)))
 
             HStack(spacing: 4) {
                 shortcutHint("Return")
@@ -29,7 +31,7 @@ struct HeaderQuickAddPopover: View {
         }
         .padding(.horizontal, 13)
         .padding(.vertical, 10)
-        .frame(width: 286)
+        .frame(width: TextSize.panelDimension(286, scale: textScale))
         .onAppear(perform: focusInput)
     }
 
@@ -49,7 +51,7 @@ struct HeaderQuickAddPopover: View {
 
     private func shortcutHint(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 10, weight: .semibold))
+            .font(.system(size: TextSize.scaled(10, by: textScale), weight: .semibold))
             .foregroundStyle(.secondary)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
@@ -63,6 +65,7 @@ struct HeaderQuickAddPopover: View {
 private struct QuickAddTaskTextField: NSViewRepresentable {
     @Binding var text: String
     let focusRequest: Int
+    let fontSize: CGFloat
     var onSubmit: () -> Void
     var onCancel: () -> Void
 
@@ -80,7 +83,7 @@ private struct QuickAddTaskTextField: NSViewRepresentable {
         textField.isSelectable = true
         textField.focusRingType = .none
         textField.placeholderString = "Add task..."
-        textField.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        textField.font = NSFont.systemFont(ofSize: fontSize, weight: .medium)
         textField.usesSingleLineMode = true
         textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return textField
@@ -88,6 +91,9 @@ private struct QuickAddTaskTextField: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSTextField, context: Context) {
         context.coordinator.parent = self
+        let font = NSFont.systemFont(ofSize: fontSize, weight: .medium)
+        nsView.font = font
+        nsView.currentEditor()?.font = font
 
         if nsView.stringValue != text {
             nsView.stringValue = text

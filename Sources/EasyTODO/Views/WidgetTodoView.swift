@@ -3,6 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct WidgetTodoView: View {
+    @AppStorage(EasyTODOSettings.textScale) private var textScale = TextSize.defaultScale
     @Environment(\.modelContext) private var modelContext
     @Query(sort: [
         SortDescriptor(\TodoTask.sortOrder),
@@ -52,7 +53,7 @@ struct WidgetTodoView: View {
             footer
         }
         .padding(14)
-        .frame(width: 236)
+        .frame(width: TextSize.widgetSize(scale: textScale).width)
         .background(widgetSurface)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
@@ -75,17 +76,17 @@ struct WidgetTodoView: View {
         HStack(alignment: .center, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Today's TODOs")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: TextSize.scaled(13, by: textScale), weight: .semibold))
 
                 Text("\(activeCount) active - \(completedCount) done")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: TextSize.scaled(11, by: textScale), weight: .medium))
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
             Text("\(completedCount)/\(todayTasks.count)")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(size: TextSize.scaled(12, by: textScale), weight: .semibold, design: .rounded))
                 .padding(.horizontal, 9)
                 .padding(.vertical, 5)
                 .background(.primary.opacity(0.045), in: Capsule())
@@ -111,14 +112,14 @@ struct WidgetTodoView: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 6) {
             Image(systemName: "sparkle")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: TextSize.scaled(18, by: textScale), weight: .semibold))
                 .foregroundStyle(.secondary)
 
             Text("Clear day")
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: TextSize.scaled(14, by: textScale), weight: .semibold))
 
             Text("Double-click to open the full list.")
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: TextSize.scaled(11, by: textScale), weight: .medium))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -134,7 +135,7 @@ struct WidgetTodoView: View {
             }
             .padding(.trailing, 4)
         }
-        .frame(maxHeight: 190)
+        .frame(maxHeight: TextSize.panelDimension(190, scale: textScale))
         .scrollIndicators(.visible)
     }
 
@@ -144,10 +145,10 @@ struct WidgetTodoView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.up.right.square")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: TextSize.scaled(11, by: textScale), weight: .semibold))
 
                 Text("Open full app")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: TextSize.scaled(12, by: textScale), weight: .semibold))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
@@ -191,15 +192,16 @@ struct WidgetTodoView: View {
                     .frame(width: 7, height: 7)
 
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: TextSize.scaled(13, by: textScale), weight: .semibold))
                     .foregroundStyle(task.isCompleted ? Color.accentColor : Color.secondary)
 
                 FloatingTaskTitle(
                     title: task.title,
                     isCompleted: task.isCompleted,
-                    fontSize: 13,
+                    fontSize: TextSize.scaled(13, by: textScale),
                     fontWeight: .medium
                 )
+                .frame(maxWidth: .infinity, minHeight: TextSize.rowHeight(baseFontSize: 13, scale: textScale))
 
                 Spacer(minLength: 0)
             }

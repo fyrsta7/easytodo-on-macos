@@ -83,6 +83,7 @@ New tasks default to green. The UI shows a single color dot picker instead of wr
 - Click the date header to open calendar planning; legacy unscheduled tasks are normalized to today.
 - Right-click the main window to change always-on-top, transparency, or widget mode.
 - Choose 100%, 80%, or 50% transparency levels.
+- Open Settings (`Command + ,`) → Text Size to adjust task text from 85% to 160%; changes apply immediately and persist after relaunch.
 - SwiftData autosaves edits, app deactivation, and termination into the user's Application Support directory.
 
 ## Installation
@@ -180,6 +181,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.8 | UI | Add a persistent 85–160% text-size slider with a live preview and reset in Settings; resize task text, inline editing, input fields, hover cards, menu bar lists, and widgets together. |
 | Local 1.0.7 | UI | Enlarge priority controls to 32 × 28 points and palette choices to 32 × 32 points, add rounded-rectangle hover feedback, and keep a clear gap before the delete button without increasing task-row height. |
 | Local 1.0.6 | UI | Show the same hover card for every menu bar task, including fully visible short titles. |
 | Local 1.0.5 | UI | Show truncated task titles in opaque hover cards, track hover across menu bar rows, restore native main-window controls with close-to-menu-bar behavior, and stage app signing outside synced folders for reliable local builds. |

@@ -3,6 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct MenuBarTodoView: View {
+    @AppStorage(EasyTODOSettings.textScale) private var textScale = TextSize.defaultScale
     @Environment(\.modelContext) private var modelContext
     @Query(sort: [
         SortDescriptor(\TodoTask.sortOrder),
@@ -34,12 +35,12 @@ struct MenuBarTodoView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Today")
-                    .font(.headline)
+                    .font(.system(size: TextSize.scaled(13, by: textScale), weight: .semibold))
 
                 Spacer()
 
                 Text("\(completedCount) / \(todayTasks.count)")
-                    .font(.caption)
+                    .font(.system(size: TextSize.scaled(11, by: textScale)))
                     .foregroundStyle(.secondary)
 
                 Button(action: showQuickAdd) {
@@ -62,6 +63,7 @@ struct MenuBarTodoView: View {
 
             if todayTasks.isEmpty {
                 Text("No tasks yet")
+                    .font(.system(size: TextSize.scaled(13, by: textScale)))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
@@ -98,10 +100,11 @@ struct MenuBarTodoView: View {
             }
             .labelStyle(.titleAndIcon)
             .controlSize(.small)
+            .font(.system(size: TextSize.scaled(11, by: textScale)))
 
         }
         .padding(14)
-        .frame(width: 260)
+        .frame(width: TextSize.panelDimension(260, scale: textScale))
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
             WindowManager.shared.showMainWindow()
@@ -126,7 +129,11 @@ struct MenuBarTodoView: View {
     }
 
     private var taskListHeight: CGFloat {
-        min(CGFloat(orderedTasks.count) * 28, 220)
+        min(CGFloat(orderedTasks.count) * (titleHeight + 6), TextSize.panelDimension(220, scale: textScale))
+    }
+
+    private var titleHeight: CGFloat {
+        TextSize.rowHeight(baseFontSize: 13, scale: textScale)
     }
 
     private var deleteConfirmationBinding: Binding<Bool> {
@@ -164,12 +171,12 @@ struct MenuBarTodoView: View {
                     FloatingTaskTitle(
                         title: task.title,
                         isCompleted: task.isCompleted,
-                        fontSize: 13,
+                        fontSize: TextSize.scaled(13, by: textScale),
                         fontWeight: .regular,
                         isHovered: hoveredTaskID == task.persistentModelID,
                         alwaysShowPreview: true
                     )
-                    .frame(maxWidth: .infinity, minHeight: 22)
+                    .frame(maxWidth: .infinity, minHeight: titleHeight)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }

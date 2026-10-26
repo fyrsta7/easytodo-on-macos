@@ -3,6 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct TaskRow: View {
+    @AppStorage(EasyTODOSettings.textScale) private var textScale = TextSize.defaultScale
     @Bindable var task: TodoTask
     var onUpdate: () -> Void
     var onCompletionChanged: (_ task: TodoTask, _ oldValue: Bool, _ newValue: Bool) -> Void
@@ -89,20 +90,25 @@ struct TaskRow: View {
             InlineTaskTitleTextField(
                 text: $draftTitle,
                 focusRequest: editFocusRequest,
+                fontSize: TextSize.scaled(15, by: textScale),
                 onCommit: commitTitleEdit,
                 onCancel: cancelTitleEdit
             )
-            .frame(maxWidth: .infinity, minHeight: 22)
+            .frame(maxWidth: .infinity, minHeight: titleHeight)
         } else {
             FloatingTaskTitle(
                 title: task.title,
                 isCompleted: task.isCompleted,
-                fontSize: 15,
+                fontSize: TextSize.scaled(15, by: textScale),
                 fontWeight: .regular,
                 onDoubleClick: beginTitleEdit
             )
-            .frame(maxWidth: .infinity, minHeight: 22)
+            .frame(maxWidth: .infinity, minHeight: titleHeight)
         }
+    }
+
+    private var titleHeight: CGFloat {
+        TextSize.rowHeight(baseFontSize: 15, scale: textScale)
     }
 
     private func beginTitleEdit() {
@@ -222,6 +228,7 @@ struct TaskRow: View {
 private struct InlineTaskTitleTextField: NSViewRepresentable {
     @Binding var text: String
     let focusRequest: Int
+    let fontSize: CGFloat
     var onCommit: () -> Void
     var onCancel: () -> Void
 
@@ -238,7 +245,7 @@ private struct InlineTaskTitleTextField: NSViewRepresentable {
         textField.isEnabled = true
         textField.isSelectable = true
         textField.focusRingType = .none
-        textField.font = NSFont.systemFont(ofSize: 15, weight: .regular)
+        textField.font = NSFont.systemFont(ofSize: fontSize, weight: .regular)
         textField.usesSingleLineMode = true
         textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return textField
@@ -246,6 +253,9 @@ private struct InlineTaskTitleTextField: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSTextField, context: Context) {
         context.coordinator.parent = self
+        let font = NSFont.systemFont(ofSize: fontSize, weight: .regular)
+        nsView.font = font
+        nsView.currentEditor()?.font = font
 
         if nsView.stringValue != text {
             nsView.stringValue = text

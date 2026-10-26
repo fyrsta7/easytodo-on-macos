@@ -29,6 +29,14 @@ final class MenuBarManager: NSObject {
         popover?.performClose(nil)
     }
 
+    func applyTextSize() {
+        guard let popover else { return }
+        let width = TextSize.panelDimension(260, scale: TextSize.currentScale)
+        if popover.contentSize.width != width {
+            popover.contentSize.width = width
+        }
+    }
+
     private func observeSettings() {
         guard defaultsObserver == nil else { return }
 
@@ -158,7 +166,7 @@ final class MenuBarManager: NSObject {
     private func makePopover() -> NSPopover {
         let popover = NSPopover()
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 260, height: 360)
+        popover.contentSize = NSSize(width: TextSize.panelDimension(260, scale: TextSize.currentScale), height: 360)
 
         if let modelContainer {
             popover.contentViewController = NSHostingController(

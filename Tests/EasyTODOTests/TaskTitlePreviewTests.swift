@@ -4,6 +4,26 @@ import XCTest
 
 @MainActor
 final class TaskTitlePreviewTests: XCTestCase {
+    func testLargerPreviewUsesItsActualFontForWrappingAndHeight() {
+        let title = String(repeating: "完整显示放大后的待办文字。", count: 8)
+        let normalFont = NSFont.systemFont(ofSize: 13, weight: .medium)
+        let largeFont = NSFont.systemFont(ofSize: TextSize.scaled(13, by: 1.6), weight: .medium)
+        let normalSize = TaskTitlePreviewLayout.size(for: title, screenWidth: 1440, font: normalFont)
+        let largeSize = TaskTitlePreviewLayout.size(for: title, screenWidth: 1440, font: largeFont)
+        XCTAssertGreaterThan(largeSize.height, normalSize.height)
+
+        let label = NSTextField(wrappingLabelWithString: title)
+        label.font = largeFont
+        label.lineBreakMode = .byCharWrapping
+        label.maximumNumberOfLines = 0
+        let contentSize = NSSize(
+            width: largeSize.width - 2 * TaskTitlePreviewLayout.horizontalPadding,
+            height: largeSize.height - 2 * TaskTitlePreviewLayout.verticalPadding
+        )
+        let neededSize = label.cell!.cellSize(forBounds: NSRect(origin: .zero, size: contentSize))
+        XCTAssertLessThanOrEqual(neededSize.height, contentSize.height)
+    }
+
     func testShortChineseTitleStillPreviewsWhenClipped() {
         let title = "这条中文待办需要完整显示"
         XCTAssertLessThan(title.count, 20)

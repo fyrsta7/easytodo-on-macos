@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 struct QuickAddPanelView: View {
+    @AppStorage(EasyTODOSettings.textScale) private var textScale = TextSize.defaultScale
     static let cornerRadius: CGFloat = 22
 
     var onSubmit: (String) -> Void
@@ -27,14 +28,14 @@ struct QuickAddPanelView: View {
 
             TextField("Quick add a task...", text: $title)
                 .textFieldStyle(.plain)
-                .font(.system(size: 20, weight: .medium))
+                .font(.system(size: TextSize.scaled(20, by: textScale), weight: .medium))
                 .focused($isFocused)
                 .onSubmit {
                     onSubmit(title)
                 }
 
             Text("Return")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: TextSize.scaled(11, by: textScale), weight: .semibold))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
