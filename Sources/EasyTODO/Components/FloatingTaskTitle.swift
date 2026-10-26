@@ -7,7 +7,6 @@ struct FloatingTaskTitle: NSViewRepresentable {
     var fontSize: CGFloat = 15
     var fontWeight: NSFont.Weight = .regular
     var isHovered: Bool? = nil
-    var alwaysShowPreview = false
     var onDoubleClick: (() -> Void)?
 
     func makeNSView(context: Context) -> FloatingTaskTitleView {
@@ -22,7 +21,6 @@ struct FloatingTaskTitle: NSViewRepresentable {
             isCompleted: isCompleted,
             font: .systemFont(ofSize: fontSize, weight: fontWeight),
             isHovered: isHovered,
-            alwaysShowPreview: alwaysShowPreview,
             onDoubleClick: onDoubleClick
         )
     }
@@ -39,7 +37,6 @@ final class FloatingTaskTitleView: NSView {
     private var title = ""
     private var font = NSFont.systemFont(ofSize: 15, weight: .regular)
     private var hoverOverride: Bool?
-    private var alwaysShowPreview = false
     private var isMouseInside = false
     private var onDoubleClick: (() -> Void)?
 
@@ -139,7 +136,6 @@ final class FloatingTaskTitleView: NSView {
         isCompleted: Bool,
         font: NSFont,
         isHovered: Bool?,
-        alwaysShowPreview: Bool = false,
         onDoubleClick: (() -> Void)?
     ) {
         if self.title != title || self.font != font {
@@ -148,7 +144,6 @@ final class FloatingTaskTitleView: NSView {
         self.title = title
         self.font = font
         hoverOverride = isHovered
-        self.alwaysShowPreview = alwaysShowPreview
         self.onDoubleClick = onDoubleClick
 
         label.attributedStringValue = NSAttributedString(string: title, attributes: [
@@ -164,9 +159,9 @@ final class FloatingTaskTitleView: NSView {
     }
 
     private func updatePreview() {
+        // Every task uses the same hover card, whether or not its inline title fits.
         guard hoverOverride ?? isMouseInside,
-              let window, window.isVisible, !visibleRect.isEmpty,
-              alwaysShowPreview || TaskTitlePreviewLayout.isTruncated(title, font: font, availableWidth: bounds.width) else {
+              let window, window.isVisible, !visibleRect.isEmpty else {
             hidePanel()
             return
         }
@@ -248,12 +243,6 @@ enum TaskTitlePreviewLayout {
     static let horizontalPadding: CGFloat = 12
     static let verticalPadding: CGFloat = 10
     static let screenMargin: CGFloat = 8
-
-    static func isTruncated(_ title: String, font: NSFont, availableWidth: CGFloat) -> Bool {
-        guard availableWidth > 0 else { return false }
-        return title.contains(where: \.isNewline)
-            || (title as NSString).size(withAttributes: [.font: font]).width > availableWidth + 1
-    }
 
     static func size(for title: String, screenWidth: CGFloat, font: NSFont = TaskTitlePreviewLayout.font) -> NSSize {
         let maxWidth = min(400, max(72, screenWidth - 2 * (screenMargin + horizontalPadding)))

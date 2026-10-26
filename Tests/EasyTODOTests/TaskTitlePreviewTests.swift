@@ -24,23 +24,8 @@ final class TaskTitlePreviewTests: XCTestCase {
         XCTAssertLessThanOrEqual(neededSize.height, contentSize.height)
     }
 
-    func testShortChineseTitleStillPreviewsWhenClipped() {
-        let title = "这条中文待办需要完整显示"
-        XCTAssertLessThan(title.count, 20)
-        XCTAssertTrue(TaskTitlePreviewLayout.isTruncated(title, font: .systemFont(ofSize: 13), availableWidth: 100))
-    }
-
-    func testTruncationFollowsAvailableWidthAfterResizing() {
-        let title = "WWWWWWWWWWWW"
-        let font = NSFont.systemFont(ofSize: 15)
-        let fullWidth = (title as NSString).size(withAttributes: [.font: font]).width
-        XCTAssertTrue(TaskTitlePreviewLayout.isTruncated(title, font: font, availableWidth: fullWidth / 2))
-        XCTAssertFalse(TaskTitlePreviewLayout.isTruncated(title, font: font, availableWidth: fullWidth + 4))
-    }
-
     func testMultilinePreviewIncludesMoreThanEightLines() {
         let title = (1...12).map { "Task line \($0)" }.joined(separator: "\n")
-        XCTAssertTrue(TaskTitlePreviewLayout.isTruncated(title, font: .systemFont(ofSize: 13), availableWidth: 1000))
         let size = TaskTitlePreviewLayout.size(for: title, screenWidth: 1440)
         let font = TaskTitlePreviewLayout.font
         let eightLines = 8 * (font.ascender - font.descender + font.leading)

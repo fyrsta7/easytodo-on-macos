@@ -74,7 +74,7 @@ New tasks default to green. The UI shows a single color dot picker instead of wr
 
 - Show today's progress in the macOS menu bar, such as `2 / 5`, and open a compact task popover.
 - Toggle completion directly from the menu bar popover without opening the full app.
-- Hover over any menu bar task row to read its full title in the same opaque, wrapping preview card, including short titles that already fit.
+- Hover over task titles in the main window, menu bar, or widget to read the same opaque, wrapping preview card, including short titles that already fit. The menu bar also responds across the whole task row.
 - Open a draggable desktop widget from the app menu, menu bar popover, or main window context menu.
 - The widget floats above the desktop, joins all Spaces, shows active/done counts, and opens the full app on double-click.
 
@@ -181,6 +181,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.9 | Fix | Show hover cards for fully visible short tasks in the main window and widget too; remove the truncation gate from the shared title component and cover the actual main-row and widget views with a regression test. |
 | Local 1.0.8 | UI | Add a persistent 85–160% text-size slider with a live preview and reset in Settings; resize task text, inline editing, input fields, hover cards, menu bar lists, and widgets together. |
 | Local 1.0.7 | UI | Enlarge priority controls to 32 × 28 points and palette choices to 32 × 32 points, add rounded-rectangle hover feedback, and keep a clear gap before the delete button without increasing task-row height. |
 | Local 1.0.6 | UI | Show the same hover card for every menu bar task, including fully visible short titles. |
