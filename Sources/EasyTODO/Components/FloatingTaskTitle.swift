@@ -6,33 +6,27 @@ struct FloatingTaskTitle: NSViewRepresentable {
     var isCompleted = false
     var fontSize: CGFloat = 15
     var fontWeight: NSFont.Weight = .regular
-    var longTitleThreshold = 24
+    var isHovered: Bool? = nil
     var onDoubleClick: (() -> Void)?
 
     func makeNSView(context: Context) -> FloatingTaskTitleView {
         let view = FloatingTaskTitleView()
-        view.update(
-            title: displayTitle,
-            isCompleted: isCompleted,
-            font: .systemFont(ofSize: fontSize, weight: fontWeight),
-            longTitleThreshold: longTitleThreshold,
-            onDoubleClick: onDoubleClick
-        )
+        updateNSView(view, context: context)
         return view
     }
 
     func updateNSView(_ nsView: FloatingTaskTitleView, context: Context) {
         nsView.update(
-            title: displayTitle,
+            title: title.isEmpty ? "Untitled task" : title,
             isCompleted: isCompleted,
             font: .systemFont(ofSize: fontSize, weight: fontWeight),
-            longTitleThreshold: longTitleThreshold,
+            isHovered: isHovered,
             onDoubleClick: onDoubleClick
         )
     }
 
-    private var displayTitle: String {
-        title.isEmpty ? "Untitled task" : title
+    static func dismantleNSView(_ nsView: FloatingTaskTitleView, coordinator: ()) {
+        nsView.hidePanel()
     }
 }
 
@@ -41,9 +35,9 @@ final class FloatingTaskTitleView: NSView {
     private var trackingArea: NSTrackingArea?
     private var panel: NSPanel?
     private var title = ""
-    private var isCompleted = false
     private var font = NSFont.systemFont(ofSize: 15, weight: .regular)
-    private var longTitleThreshold = 24
+    private var hoverOverride: Bool?
+    private var isMouseInside = false
     private var onDoubleClick: (() -> Void)?
 
     override init(frame frameRect: NSRect) {
@@ -72,12 +66,16 @@ final class FloatingTaskTitleView: NSView {
 
     override var acceptsFirstResponder: Bool { true }
 
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: NSView.noIntrinsicMetric, height: ceil(font.ascender - font.descender + font.leading))
+    }
+
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         true
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        guard onDoubleClick != nil, bounds.contains(point) else { return nil }
+        guard onDoubleClick != nil, super.hitTest(point) != nil else { return nil }
         return self
     }
 
@@ -87,20 +85,17 @@ final class FloatingTaskTitleView: NSView {
             onDoubleClick?()
             return
         }
-
         super.mouseDown(with: event)
     }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
-
         if let trackingArea {
             removeTrackingArea(trackingArea)
         }
-
         let area = NSTrackingArea(
             rect: bounds,
-            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            options: [.mouseEnteredAndExited, .mouseMoved, .activeAlways, .inVisibleRect],
             owner: self,
             userInfo: nil
         )
@@ -109,136 +104,173 @@ final class FloatingTaskTitleView: NSView {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        guard shouldShowFloatingText else { return }
-        showPanel()
+        isMouseInside = true
+        updatePreview()
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        isMouseInside = true
+        updatePreview()
     }
 
     override func mouseExited(with event: NSEvent) {
-        hidePanel()
+        isMouseInside = false
+        updatePreview()
+    }
+
+    override func layout() {
+        super.layout()
+        updatePreview()
     }
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-
-        if window == nil {
-            hidePanel()
-        }
+        isMouseInside = window.map {
+            bounds.contains(convert($0.mouseLocationOutsideOfEventStream, from: nil))
+        } ?? false
+        updatePreview()
     }
 
     func update(
         title: String,
         isCompleted: Bool,
         font: NSFont,
-        longTitleThreshold: Int,
+        isHovered: Bool?,
         onDoubleClick: (() -> Void)?
     ) {
-        self.title = title
-        self.isCompleted = isCompleted
-        self.font = font
-        self.longTitleThreshold = longTitleThreshold
-        self.onDoubleClick = onDoubleClick
-
-        label.attributedStringValue = attributedTitle(title, isCompleted: isCompleted)
-        label.toolTip = title
-
-        if !shouldShowFloatingText {
+        if self.title != title || self.font != font {
             hidePanel()
         }
-    }
+        self.title = title
+        self.font = font
+        hoverOverride = isHovered
+        self.onDoubleClick = onDoubleClick
 
-    private var shouldShowFloatingText: Bool {
-        title.count > longTitleThreshold
-    }
-
-    private func attributedTitle(_ title: String, isCompleted: Bool) -> NSAttributedString {
-        let color = isCompleted ? NSColor.secondaryLabelColor : NSColor.labelColor
-        let attributes: [NSAttributedString.Key: Any] = [
+        label.attributedStringValue = NSAttributedString(string: title, attributes: [
             .font: font,
-            .foregroundColor: color,
+            .foregroundColor: isCompleted ? NSColor.secondaryLabelColor : NSColor.labelColor,
             .strikethroughStyle: isCompleted ? NSUnderlineStyle.single.rawValue : 0,
             .strikethroughColor: NSColor.secondaryLabelColor
-        ]
-        return NSAttributedString(string: title, attributes: attributes)
+        ])
+        // The custom card is the only tooltip; a delayed system tooltip would overlap it.
+        label.toolTip = nil
+        invalidateIntrinsicContentSize()
+        updatePreview()
     }
 
-    private func showPanel() {
-        guard let window, let frame = floatingFrame(), frame.width > 0, frame.height > 0 else { return }
+    private func updatePreview() {
+        guard hoverOverride ?? isMouseInside,
+              let window, window.isVisible, !visibleRect.isEmpty,
+              TaskTitlePreviewLayout.isTruncated(title, font: font, availableWidth: bounds.width) else {
+            hidePanel()
+            return
+        }
 
-        let panel = panel ?? makePanel()
-        panel.appearance = window.effectiveAppearance
-        panel.level = NSWindow.Level(rawValue: max(NSWindow.Level.floating.rawValue, window.level.rawValue + 1))
-        panel.contentView = labelView(size: frame.size)
-        panel.setFrame(frame, display: true)
-        panel.orderFrontRegardless()
-        self.panel = panel
+        let sourceFrame = window.convertToScreen(convert(bounds, to: nil))
+        let visibleFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? sourceFrame
+        let size = TaskTitlePreviewLayout.size(for: title, screenWidth: visibleFrame.width)
+        let frame = TaskTitlePreviewLayout.frame(size: size, source: sourceFrame, screen: visibleFrame)
+        let preview = panel ?? makePanel(size: size)
+        preview.appearance = window.effectiveAppearance
+        preview.level = NSWindow.Level(rawValue: max(NSWindow.Level.floating.rawValue, window.level.rawValue + 1))
+        if preview.frame != frame {
+            preview.setFrame(frame, display: true)
+        }
+        if preview.parent !== window {
+            preview.parent?.removeChildWindow(preview)
+            window.addChildWindow(preview, ordered: .above)
+        }
+        preview.orderFrontRegardless()
+        panel = preview
     }
 
-    private func hidePanel() {
-        panel?.orderOut(nil)
-        panel = nil
+    fileprivate func hidePanel() {
+        guard let panel else { return }
+        panel.parent?.removeChildWindow(panel)
+        panel.orderOut(nil)
+        self.panel = nil
     }
 
-    private func makePanel() -> NSPanel {
-        let panel = NSPanel(
-            contentRect: .zero,
+    private func makePanel(size: NSSize) -> NSPanel {
+        let preview = NSPanel(
+            contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
-        panel.isOpaque = false
-        panel.backgroundColor = .clear
-        panel.hasShadow = false
-        panel.ignoresMouseEvents = true
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
-        panel.isReleasedWhenClosed = false
-        return panel
-    }
+        preview.isOpaque = false // Only the rounded corners are transparent.
+        preview.backgroundColor = .clear
+        preview.alphaValue = 1
+        preview.hasShadow = true
+        preview.ignoresMouseEvents = true
+        preview.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
+        preview.isReleasedWhenClosed = false
+        preview.setAccessibilityLabel("Full task title")
 
-    private func labelView(size: NSSize) -> NSView {
-        let label = NSTextField(labelWithString: title)
-        label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .labelColor
-        label.drawsBackground = false
-        label.isBordered = false
-        label.lineBreakMode = .byCharWrapping
-        label.maximumNumberOfLines = 8
-        label.frame = NSRect(origin: .zero, size: size)
-        label.autoresizingMask = [.width, .height]
-        return label
-    }
+        let card = NSBox(frame: NSRect(origin: .zero, size: size))
+        card.boxType = .custom
+        card.isTransparent = false
+        card.titlePosition = .noTitle
+        card.fillColor = .windowBackgroundColor
+        card.borderColor = .separatorColor
+        card.borderWidth = 1
+        card.cornerRadius = 8
+        card.contentViewMargins = .zero
 
-    private func floatingFrame() -> NSRect? {
-        guard let window, !bounds.isEmpty else { return nil }
-
-        let size = labelSize()
-        let rectInWindow = convert(bounds, to: nil)
-        let originOnScreen = window.convertPoint(toScreen: rectInWindow.origin)
-        let sourceFrame = NSRect(origin: originOnScreen, size: rectInWindow.size)
-        let visibleFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? sourceFrame
-        let margin: CGFloat = 8
-        let gap: CGFloat = 6
-        let x = min(
-            max(sourceFrame.minX, visibleFrame.minX + margin),
-            visibleFrame.maxX - size.width - margin
+        let fullTitle = NSTextField(wrappingLabelWithString: title)
+        fullTitle.font = TaskTitlePreviewLayout.font
+        fullTitle.textColor = .labelColor
+        fullTitle.lineBreakMode = .byCharWrapping
+        fullTitle.maximumNumberOfLines = 0
+        fullTitle.frame = NSRect(origin: .zero, size: size).insetBy(
+            dx: TaskTitlePreviewLayout.horizontalPadding,
+            dy: TaskTitlePreviewLayout.verticalPadding
         )
-        let preferredY = sourceFrame.maxY + gap
-        let y = min(preferredY, visibleFrame.maxY - size.height - margin)
+        fullTitle.autoresizingMask = [.width, .height]
+        card.addSubview(fullTitle)
+        preview.contentView = card
+        return preview
+    }
+}
 
-        return NSRect(origin: NSPoint(x: x, y: max(y, visibleFrame.minY + margin)), size: size)
+@MainActor
+enum TaskTitlePreviewLayout {
+    static let font = NSFont.systemFont(ofSize: 13, weight: .medium)
+    static let horizontalPadding: CGFloat = 12
+    static let verticalPadding: CGFloat = 10
+    static let screenMargin: CGFloat = 8
+
+    static func isTruncated(_ title: String, font: NSFont, availableWidth: CGFloat) -> Bool {
+        guard availableWidth > 0 else { return false }
+        return title.contains(where: \.isNewline)
+            || (title as NSString).size(withAttributes: [.font: font]).width > availableWidth + 1
     }
 
-    private func labelSize() -> NSSize {
-        let maxWidth: CGFloat = 280
-        let floatingFont = NSFont.systemFont(ofSize: 12, weight: .medium)
-        let attributes: [NSAttributedString.Key: Any] = [.font: floatingFont]
-        let bounds = NSAttributedString(string: title, attributes: attributes).boundingRect(
-            with: NSSize(width: maxWidth, height: .greatestFiniteMagnitude),
+    static func size(for title: String, screenWidth: CGFloat) -> NSSize {
+        let maxWidth = min(400, max(72, screenWidth - 2 * (screenMargin + horizontalPadding)))
+        let textWidth = min(maxWidth, max(72, ceil((title as NSString).size(withAttributes: [.font: font]).width)))
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.lineBreakMode = .byCharWrapping
+        let textBounds = NSAttributedString(string: title, attributes: [.font: font, .paragraphStyle: paragraph]).boundingRect(
+            // NSTextField reserves a small inset on each side of its text cell.
+            with: NSSize(width: textWidth - 4, height: .greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin, .usesFontLeading]
         )
-        let lineHeight = ceil(floatingFont.ascender - floatingFont.descender + floatingFont.leading)
-        let width = min(max(ceil(bounds.width), 72), maxWidth)
-        let height = min(max(ceil(bounds.height), lineHeight), lineHeight * 8)
+        let lineHeight = ceil(font.ascender - font.descender + font.leading)
+        return NSSize(
+            width: textWidth + 2 * horizontalPadding,
+            height: max(ceil(textBounds.height) + 2, lineHeight) + 2 * verticalPadding
+        )
+    }
 
-        return NSSize(width: width, height: height)
+    static func frame(size: NSSize, source: NSRect, screen: NSRect) -> NSRect {
+        let gap: CGFloat = 6
+        let x = max(screen.minX + screenMargin, min(source.minX, screen.maxX - size.width - screenMargin))
+        let below = source.minY - gap - size.height
+        let y = below >= screen.minY + screenMargin ? below : source.maxY + gap
+        return NSRect(
+            origin: NSPoint(x: x, y: max(screen.minY + screenMargin, min(y, screen.maxY - size.height - screenMargin))),
+            size: size
+        )
     }
 }

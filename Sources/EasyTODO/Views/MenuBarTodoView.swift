@@ -11,6 +11,7 @@ struct MenuBarTodoView: View {
 
     @State private var isQuickAddPresented = false
     @State private var taskPendingDeletion: TodoTask?
+    @State private var hoveredTaskID: PersistentIdentifier?
 
     private let calendar = Calendar.current
     private let dayRefreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
@@ -106,6 +107,7 @@ struct MenuBarTodoView: View {
             WindowManager.shared.showMainWindow()
         }
         .onAppear(perform: runDailyTaskMaintenance)
+        .onDisappear { hoveredTaskID = nil }
         .onReceive(dayRefreshTimer) { _ in
             runDailyTaskMaintenance()
         }
@@ -164,10 +166,9 @@ struct MenuBarTodoView: View {
                         isCompleted: task.isCompleted,
                         fontSize: 13,
                         fontWeight: .regular,
-                        longTitleThreshold: 20
+                        isHovered: hoveredTaskID == task.persistentModelID
                     )
-
-                    Spacer()
+                    .frame(maxWidth: .infinity, minHeight: 22)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -184,6 +185,19 @@ struct MenuBarTodoView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Delete task")
+        }
+        .contentShape(Rectangle())
+        .onContinuousHover { phase in
+            switch phase {
+            case .active:
+                if hoveredTaskID != task.persistentModelID {
+                    hoveredTaskID = task.persistentModelID
+                }
+            case .ended:
+                if hoveredTaskID == task.persistentModelID {
+                    hoveredTaskID = nil
+                }
+            }
         }
     }
 

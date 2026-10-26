@@ -34,7 +34,7 @@ struct EasyTODOApp: App {
                 .modelContainer(modelContainer)
                 .preferredColorScheme(preferredColorScheme)
         }
-        .windowStyle(.hiddenTitleBar)
+        .windowStyle(.titleBar)
         .commands {
             CommandGroup(after: .undoRedo) {
                 Button("Undo Delete") {

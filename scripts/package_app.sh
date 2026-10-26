@@ -3,19 +3,21 @@ set -euo pipefail
 
 APP_NAME="EasyTODO"
 BUNDLE_ID="${BUNDLE_ID:-com.easytodo.EasyTODO}"
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-1.0.5}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
 CONFIGURATION="${CONFIGURATION:-release}"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$PROJECT_ROOT/dist"
-APP_BUNDLE="$DIST_DIR/$APP_NAME.app"
+STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/easytodo-package.XXXXXX")"
+trap 'rm -rf "$STAGING_DIR"' EXIT
+APP_BUNDLE="$STAGING_DIR/$APP_NAME.app"
 CONTENTS_DIR="$APP_BUNDLE/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 INFO_PLIST="$CONTENTS_DIR/Info.plist"
 ICON_SOURCE="$PROJECT_ROOT/Sources/EasyTODO/Resources/logo.png"
-ICONSET_DIR="$DIST_DIR/$APP_NAME.iconset"
+ICONSET_DIR="$STAGING_DIR/$APP_NAME.iconset"
 ICON_FILE="$RESOURCES_DIR/$APP_NAME.icns"
 ZIP_PATH="$DIST_DIR/$APP_NAME-macOS.zip"
 
@@ -35,18 +37,6 @@ if [[ ! -x "$EXECUTABLE" ]]; then
 fi
 
 mkdir -p "$DIST_DIR"
-
-if [[ -e "$APP_BUNDLE" ]]; then
-    case "$APP_BUNDLE" in
-        "$PROJECT_ROOT"/dist/*.app)
-            rm -rf "$APP_BUNDLE"
-            ;;
-        *)
-            echo "Refusing to remove unexpected app path: $APP_BUNDLE" >&2
-            exit 1
-            ;;
-    esac
-fi
 
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 install -m 755 "$EXECUTABLE" "$MACOS_DIR/$APP_NAME"
@@ -117,11 +107,30 @@ printf "APPL????" > "$CONTENTS_DIR/PkgInfo"
 plutil -lint "$INFO_PLIST" >/dev/null
 
 if command -v codesign >/dev/null 2>&1; then
+    # Desktop/iCloud can attach Finder metadata to newly created bundles.
+    # Strip only the signing-incompatible attributes from the generated app.
+    xattr -dr com.apple.FinderInfo "$APP_BUNDLE" 2>/dev/null || true
+    xattr -dr com.apple.ResourceFork "$APP_BUNDLE" 2>/dev/null || true
     codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null
+    codesign --verify --deep --strict "$APP_BUNDLE"
 fi
 
 rm -f "$ZIP_PATH"
 ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" "$ZIP_PATH"
 
-echo "Packaged app: $APP_BUNDLE"
+DESTINATION_APP="$DIST_DIR/$APP_NAME.app"
+if [[ -e "$DESTINATION_APP" ]]; then
+    case "$DESTINATION_APP" in
+        "$PROJECT_ROOT"/dist/*.app)
+            rm -rf "$DESTINATION_APP"
+            ;;
+        *)
+            echo "Refusing to remove unexpected app path: $DESTINATION_APP" >&2
+            exit 1
+            ;;
+    esac
+fi
+ditto --norsrc "$APP_BUNDLE" "$DESTINATION_APP"
+
+echo "Packaged app: $DESTINATION_APP"
 echo "Installable zip: $ZIP_PATH"

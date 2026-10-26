@@ -1,12 +1,14 @@
 import AppKit
 
 @MainActor
-final class WindowManager: ObservableObject {
+final class WindowManager: NSObject, ObservableObject {
     static let shared = WindowManager()
 
     private var mainWindow: NSWindow?
 
-    private init() {}
+    private override init() {
+        super.init()
+    }
 
     func configureMainWindow(_ window: NSWindow) {
         guard mainWindow !== window else {
@@ -20,31 +22,29 @@ final class WindowManager: ObservableObject {
         window.minSize = NSSize(width: 280, height: 320)
         window.setContentSize(NSSize(width: 340, height: 480))
         window.isOpaque = false
-        window.backgroundColor = .clear
+        window.backgroundColor = .windowBackgroundColor
         window.titlebarAppearsTransparent = false
-        window.titleVisibility = .hidden
+        window.titleVisibility = .visible
         window.isMovableByWindowBackground = true
-        window.styleMask.insert(.fullSizeContentView)
-        window.styleMask.insert(.resizable)
-        hideNativeWindowControls(in: window)
-        window.styleMask.remove(.titled)
+        window.styleMask.insert([.titled, .closable, .miniaturizable, .resizable])
+        window.styleMask.remove(.fullSizeContentView)
+        window.isReleasedWhenClosed = false
+        configureNativeWindowControls(in: window)
         window.collectionBehavior.insert(.canJoinAllSpaces)
         window.collectionBehavior.insert(.fullScreenAuxiliary)
-
-        DispatchQueue.main.async { [weak window] in
-            guard let window else { return }
-            self.hideNativeWindowControls(in: window)
-            window.styleMask.remove(.titled)
-        }
 
         applyWindowSettings()
     }
 
-    private func hideNativeWindowControls(in window: NSWindow) {
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
-        window.standardWindowButton(.closeButton)?.superview?.isHidden = true
+    private func configureNativeWindowControls(in window: NSWindow) {
+        for type: NSWindow.ButtonType in [.closeButton, .miniaturizeButton, .zoomButton] {
+            window.standardWindowButton(type)?.isHidden = false
+        }
+
+        // Keep the task window available for reopening from the menu bar.
+        let closeButton = window.standardWindowButton(.closeButton)
+        closeButton?.target = self
+        closeButton?.action = #selector(closeMainWindow)
     }
 
     func applyWindowSettings() {
@@ -79,7 +79,7 @@ final class WindowManager: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    func closeMainWindow() {
+    @objc func closeMainWindow() {
         mainWindow?.orderOut(nil)
     }
 

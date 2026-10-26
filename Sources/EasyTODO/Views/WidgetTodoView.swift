@@ -198,8 +198,7 @@ struct WidgetTodoView: View {
                     title: task.title,
                     isCompleted: task.isCompleted,
                     fontSize: 13,
-                    fontWeight: .medium,
-                    longTitleThreshold: 18
+                    fontWeight: .medium
                 )
 
                 Spacer(minLength: 0)

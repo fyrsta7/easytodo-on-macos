@@ -74,6 +74,7 @@ New tasks default to green. The UI shows a single color dot picker instead of wr
 
 - Show today's progress in the macOS menu bar, such as `2 / 5`, and open a compact task popover.
 - Toggle completion directly from the menu bar popover without opening the full app.
+- Hover over a menu bar task row to read a truncated title in an opaque, wrapping preview card.
 - Open a draggable desktop widget from the app menu, menu bar popover, or main window context menu.
 - The widget floats above the desktop, joins all Spaces, shows active/done counts, and opens the full app on double-click.
 
@@ -120,8 +121,9 @@ swift run EasyTODO
 3. Use the color dot to set priority.
 4. Check a task to complete it; EasyTODO plays a sound and shows a small celebration.
 5. Open the desktop widget from the app menu, menu bar popover, or main window context menu when you want a smaller view.
-6. Right-click the window to change always-on-top, transparency, or widget mode.
-7. Open Settings to manage launch, menu bar, visibility, transparency, and theme.
+6. Use the native top-left window controls to close or minimize the main window. Closing keeps EasyTODO available in the menu bar; double-click its menu bar item to reopen the window.
+7. Right-click the window to change always-on-top, transparency, or widget mode.
+8. Open Settings to manage launch, menu bar, visibility, transparency, and theme.
 
 ## Keyboard Shortcuts
 
@@ -178,6 +180,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.5 | UI | Show truncated task titles in opaque hover cards, track hover across menu bar rows, restore native main-window controls with close-to-menu-bar behavior, and stage app signing outside synced folders for reliable local builds. |
 | `v1.0.4` | ![release](https://img.shields.io/badge/-release-8250df?style=flat-square) | Added a widget right-click transparency slider and deepened the fully opaque widget surface. |
 | `v1.0.3` | ![release](https://img.shields.io/badge/-release-8250df?style=flat-square) | Added task context editing, priority sorting, date moves, repeat scheduling, and the agent restart rule. |
 | `v1.0.2` | ![release](https://img.shields.io/badge/-release-8250df?style=flat-square) | Added the Product Hunt badge and long-task floating text previews on hover. |
