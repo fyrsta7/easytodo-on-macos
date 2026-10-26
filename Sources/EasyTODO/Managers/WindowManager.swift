@@ -19,6 +19,7 @@ final class WindowManager: NSObject, ObservableObject {
         mainWindow = window
         window.identifier = NSUserInterfaceItemIdentifier("easy-todo-main-window")
         window.title = "EasyTODO"
+        window.tabbingMode = .disallowed
         window.minSize = NSSize(width: 280, height: 320)
         window.setContentSize(NSSize(width: 340, height: 480))
         window.isOpaque = false
@@ -65,17 +66,18 @@ final class WindowManager: NSObject, ObservableObject {
         NSApp.setActivationPolicy(hideDockIcon && showMenuBar ? .accessory : .regular)
     }
 
-    func showMainWindow() {
-        if let window = mainWindow {
-            if window.isMiniaturized {
-                window.deminiaturize(nil)
-            }
+    @discardableResult
+    func showMainWindow() -> Bool {
+        guard let window = mainWindow else { return false }
 
-            window.orderFrontRegardless()
-            window.makeKeyAndOrderFront(nil)
+        if window.isMiniaturized {
+            window.deminiaturize(nil)
         }
 
+        window.orderFrontRegardless()
+        window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        return true
     }
 
     @objc func closeMainWindow() {

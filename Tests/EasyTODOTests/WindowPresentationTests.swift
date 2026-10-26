@@ -5,6 +5,40 @@ import XCTest
 
 @MainActor
 final class WindowPresentationTests: XCTestCase {
+    func testRepeatedReopenRequestsReuseMainWindowWhenOtherWindowsAreVisible() {
+        let app = NSApplication.shared
+        let window = NSWindow(
+            contentRect: NSRect(x: -10000, y: -10000, width: 340, height: 480),
+            styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false
+        )
+        let settingsWindow = NSWindow(
+            contentRect: NSRect(x: -10000, y: -10000, width: 420, height: 400),
+            styleMask: [.titled], backing: .buffered, defer: false
+        )
+        defer {
+            window.orderOut(nil)
+            settingsWindow.orderOut(nil)
+        }
+        WindowManager.shared.configureMainWindow(window)
+        let delegate = AppDelegate()
+        let windowCount = app.windows.count
+
+        for hasOtherVisibleWindows in [false, true, false, true] {
+            window.orderOut(nil)
+            if hasOtherVisibleWindows {
+                settingsWindow.orderFront(nil)
+            } else {
+                settingsWindow.orderOut(nil)
+            }
+
+            XCTAssertFalse(delegate.applicationShouldHandleReopen(app, hasVisibleWindows: hasOtherVisibleWindows))
+            XCTAssertTrue(window.isVisible)
+            XCTAssertEqual(app.windows.count, windowCount)
+            XCTAssertFalse(delegate.applicationShouldHandleReopen(app, hasVisibleWindows: true))
+            XCTAssertEqual(app.windows.count, windowCount)
+        }
+    }
+
     func testNativeCloseButtonHidesWindowAndMenuBarCanReopenIt() throws {
         _ = NSApplication.shared
         let window = NSWindow(
@@ -46,7 +80,7 @@ final class WindowPresentationTests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.02))
         }
         XCTAssertTrue(window.isMiniaturized)
-        WindowManager.shared.showMainWindow()
+        XCTAssertFalse(AppDelegate().applicationShouldHandleReopen(NSApplication.shared, hasVisibleWindows: false))
         XCTAssertFalse(window.isMiniaturized)
         XCTAssertTrue(window.isVisible)
     }

@@ -123,6 +123,7 @@ swift run EasyTODO
 4. Check a task to complete it; EasyTODO plays a sound and shows a small celebration.
 5. Open the desktop widget from the app menu, menu bar popover, or main window context menu when you want a smaller view.
 6. Use the native top-left window controls to close or minimize the main window. Closing keeps EasyTODO available in the menu bar; double-click its menu bar item to reopen the window.
+   Reopening EasyTODO reuses the single main window, including when Settings or the widget is visible.
 7. Right-click the window to change always-on-top, opacity, or widget mode.
 8. Open Settings to manage launch, menu bar, visibility, opacity, text size, and theme.
 
@@ -181,6 +182,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.11 | Fix | Keep one main task window with a singleton SwiftUI scene; reopening restores the existing window instead of requesting another, including when Settings or the widget is already visible. Disable task-window tabbing. |
 | Local 1.0.10 | UI | Replace the three window-opacity presets with a live 50%–100% slider in Settings and a right-click popover; preserve custom values, including 90%, after relaunch. |
 | Local 1.0.9 | Fix | Show hover cards for fully visible short tasks in the main window and widget too; remove the truncation gate from the shared title component and cover the actual main-row and widget views with a regression test. |
 | Local 1.0.8 | UI | Add a persistent 85–160% text-size slider with a live preview and reset in Settings; resize task text, inline editing, input fields, hover cards, menu bar lists, and widgets together. |

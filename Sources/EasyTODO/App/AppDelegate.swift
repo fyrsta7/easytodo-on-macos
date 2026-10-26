@@ -18,9 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag {
-            WindowManager.shared.showMainWindow()
-        }
-        return true
+        // Reuse the main window even if Settings or the widget is already visible.
+        // Only allow default scene creation before a main window has been registered.
+        return !WindowManager.shared.showMainWindow()
     }
 }
