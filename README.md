@@ -180,6 +180,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.7 | UI | Enlarge priority controls to 32 × 28 points and palette choices to 32 × 32 points, add rounded-rectangle hover feedback, and keep a clear gap before the delete button without increasing task-row height. |
 | Local 1.0.6 | UI | Show the same hover card for every menu bar task, including fully visible short titles. |
 | Local 1.0.5 | UI | Show truncated task titles in opaque hover cards, track hover across menu bar rows, restore native main-window controls with close-to-menu-bar behavior, and stage app signing outside synced folders for reliable local builds. |
 | `v1.0.4` | ![release](https://img.shields.io/badge/-release-8250df?style=flat-square) | Added a widget right-click transparency slider and deepened the fully opaque widget surface. |

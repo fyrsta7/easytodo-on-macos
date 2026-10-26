@@ -41,6 +41,7 @@ struct TaskRow: View {
 
             PriorityPicker(priority: priorityBinding)
                 .opacity(task.isCompleted ? 0.6 : 1)
+                .padding(.trailing, 4)
 
             Button {
                 isConfirmingDelete = true
