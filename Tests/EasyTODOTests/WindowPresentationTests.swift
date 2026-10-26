@@ -50,7 +50,7 @@ final class WindowPresentationTests: XCTestCase {
         XCTAssertTrue(window.isVisible)
     }
 
-    func testRowHoverShowsOpaqueFullTitleAndRemovesCardOnExit() throws {
+    func testRowHoverShowsOpaqueCardsForLongAndShortTitlesAndHidesOnExit() throws {
         _ = NSApplication.shared
         let window = NSWindow(
             contentRect: NSRect(x: -10000, y: -10000, width: 260, height: 200),
@@ -78,6 +78,21 @@ final class WindowPresentationTests: XCTestCase {
         XCTAssertEqual(label.maximumNumberOfLines, 0)
         titleView.update(title: title, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: false, onDoubleClick: nil)
         XCTAssertFalse(preview.isVisible)
+        XCTAssertTrue(window.childWindows?.isEmpty ?? true)
+
+        let shortTitle = "喝水"
+        XCTAssertFalse(TaskTitlePreviewLayout.isTruncated(shortTitle, font: .systemFont(ofSize: 13), availableWidth: titleView.bounds.width))
+        titleView.update(title: shortTitle, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: true, alwaysShowPreview: true, onDoubleClick: nil)
+        let shortPreview = try XCTUnwrap(window.childWindows?.first)
+        let shortCard = try XCTUnwrap(shortPreview.contentView as? NSBox)
+        let shortLabel = try XCTUnwrap(shortCard.contentView?.subviews.compactMap { $0 as? NSTextField }.first)
+        XCTAssertTrue(shortPreview.isVisible)
+        XCTAssertEqual(shortLabel.stringValue, shortTitle)
+        XCTAssertEqual(shortCard.fillColor, card.fillColor)
+        XCTAssertEqual(shortCard.cornerRadius, card.cornerRadius)
+        XCTAssertFalse(shortCard.isTransparent)
+        titleView.update(title: shortTitle, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: false, alwaysShowPreview: true, onDoubleClick: nil)
+        XCTAssertFalse(shortPreview.isVisible)
         XCTAssertTrue(window.childWindows?.isEmpty ?? true)
     }
 }

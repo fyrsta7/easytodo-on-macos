@@ -7,6 +7,7 @@ struct FloatingTaskTitle: NSViewRepresentable {
     var fontSize: CGFloat = 15
     var fontWeight: NSFont.Weight = .regular
     var isHovered: Bool? = nil
+    var alwaysShowPreview = false
     var onDoubleClick: (() -> Void)?
 
     func makeNSView(context: Context) -> FloatingTaskTitleView {
@@ -21,6 +22,7 @@ struct FloatingTaskTitle: NSViewRepresentable {
             isCompleted: isCompleted,
             font: .systemFont(ofSize: fontSize, weight: fontWeight),
             isHovered: isHovered,
+            alwaysShowPreview: alwaysShowPreview,
             onDoubleClick: onDoubleClick
         )
     }
@@ -37,6 +39,7 @@ final class FloatingTaskTitleView: NSView {
     private var title = ""
     private var font = NSFont.systemFont(ofSize: 15, weight: .regular)
     private var hoverOverride: Bool?
+    private var alwaysShowPreview = false
     private var isMouseInside = false
     private var onDoubleClick: (() -> Void)?
 
@@ -136,6 +139,7 @@ final class FloatingTaskTitleView: NSView {
         isCompleted: Bool,
         font: NSFont,
         isHovered: Bool?,
+        alwaysShowPreview: Bool = false,
         onDoubleClick: (() -> Void)?
     ) {
         if self.title != title || self.font != font {
@@ -144,6 +148,7 @@ final class FloatingTaskTitleView: NSView {
         self.title = title
         self.font = font
         hoverOverride = isHovered
+        self.alwaysShowPreview = alwaysShowPreview
         self.onDoubleClick = onDoubleClick
 
         label.attributedStringValue = NSAttributedString(string: title, attributes: [
@@ -161,7 +166,7 @@ final class FloatingTaskTitleView: NSView {
     private func updatePreview() {
         guard hoverOverride ?? isMouseInside,
               let window, window.isVisible, !visibleRect.isEmpty,
-              TaskTitlePreviewLayout.isTruncated(title, font: font, availableWidth: bounds.width) else {
+              alwaysShowPreview || TaskTitlePreviewLayout.isTruncated(title, font: font, availableWidth: bounds.width) else {
             hidePanel()
             return
         }

@@ -166,7 +166,8 @@ struct MenuBarTodoView: View {
                         isCompleted: task.isCompleted,
                         fontSize: 13,
                         fontWeight: .regular,
-                        isHovered: hoveredTaskID == task.persistentModelID
+                        isHovered: hoveredTaskID == task.persistentModelID,
+                        alwaysShowPreview: true
                     )
                     .frame(maxWidth: .infinity, minHeight: 22)
                 }
