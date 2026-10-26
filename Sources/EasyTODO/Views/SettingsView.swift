@@ -62,13 +62,8 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Transparency") {
-                Picker("Window", selection: $transparency) {
-                    Text("100%").tag(1.0)
-                    Text("80%").tag(0.80)
-                    Text("50%").tag(0.50)
-                }
-                .pickerStyle(.segmented)
+            Section("Opacity") {
+                WindowOpacityControl(value: $transparency)
             }
 
             Section("Theme") {

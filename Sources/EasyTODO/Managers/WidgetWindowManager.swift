@@ -130,7 +130,7 @@ final class WidgetWindowManager {
         let container = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 54))
         let currentValue = UserDefaults.standard.double(forKey: EasyTODOSettings.widgetTransparency)
 
-        let label = NSTextField(labelWithString: "Transparency \(Int((currentValue * 100).rounded()))%")
+        let label = NSTextField(labelWithString: "Opacity \(Int((currentValue * 100).rounded()))%")
         label.frame = NSRect(x: 14, y: 31, width: 190, height: 16)
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .labelColor
@@ -196,7 +196,7 @@ private final class WidgetContextMenuController: NSObject {
     @objc func changeTransparency(_ sender: NSSlider) {
         let value = sender.doubleValue
         UserDefaults.standard.set(value, forKey: EasyTODOSettings.widgetTransparency)
-        transparencyLabel?.stringValue = "Transparency \(Int((value * 100).rounded()))%"
+        transparencyLabel?.stringValue = "Opacity \(Int((value * 100).rounded()))%"
         WidgetWindowManager.shared.applyWidgetTransparency()
     }
 }

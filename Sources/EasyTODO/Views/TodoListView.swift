@@ -19,6 +19,7 @@ struct TodoListView: View {
     @State private var selectedDate = Date()
     @State private var isCalendarPresented = false
     @State private var isHeaderQuickAddPresented = false
+    @State private var isOpacityPresented = false
     @State private var deletedTaskToRestore: DeletedTaskSnapshot?
     @State private var undoKeyMonitor: Any?
     @State private var fireworksTrigger = 0
@@ -146,12 +147,10 @@ struct TodoListView: View {
                 Label("Always on Top", systemImage: alwaysOnTop ? "checkmark.circle.fill" : "circle")
             }
 
-            Menu {
-                transparencyMenuButton(title: "100%", value: 1.0)
-                transparencyMenuButton(title: "80%", value: 0.80)
-                transparencyMenuButton(title: "50%", value: 0.50)
+            Button {
+                isOpacityPresented = true
             } label: {
-                Label("Transparency: \(transparencyTitle)", systemImage: "slider.horizontal.3")
+                Label("Opacity: \(transparencyTitle)…", systemImage: "slider.horizontal.3")
             }
 
             if deletedTaskToRestore != nil {
@@ -163,6 +162,11 @@ struct TodoListView: View {
                     Label("Undo Delete", systemImage: "arrow.uturn.backward")
                 }
             }
+        }
+        .popover(isPresented: $isOpacityPresented, arrowEdge: .trailing) {
+            WindowOpacityControl(value: $transparency)
+                .padding(16)
+                .frame(width: 280)
         }
         .background(
             WindowAccessor { window in
@@ -315,19 +319,6 @@ struct TodoListView: View {
 
     private var transparencyTitle: String {
         "\(Int((transparency * 100).rounded()))%"
-    }
-
-    private func transparencyMenuButton(title: String, value: Double) -> some View {
-        Button {
-            transparency = value
-            WindowManager.shared.applyWindowSettings()
-        } label: {
-            Label(title, systemImage: isSelectedTransparency(value) ? "checkmark.circle.fill" : "circle")
-        }
-    }
-
-    private func isSelectedTransparency(_ value: Double) -> Bool {
-        abs(transparency - value) < 0.001
     }
 
     private var completedSeparator: some View {

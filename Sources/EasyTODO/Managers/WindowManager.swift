@@ -47,15 +47,14 @@ final class WindowManager: NSObject, ObservableObject {
         closeButton?.action = #selector(closeMainWindow)
     }
 
-    func applyWindowSettings() {
+    func applyWindowSettings(in defaults: UserDefaults = .standard) {
         guard let window = mainWindow else { return }
 
-        let defaults = UserDefaults.standard
         let alwaysOnTop = defaults.bool(forKey: EasyTODOSettings.alwaysOnTop)
         let transparency = defaults.double(forKey: EasyTODOSettings.transparency)
 
         window.level = alwaysOnTop ? .floating : .normal
-        window.alphaValue = min(max(transparency, 0.50), 1.0)
+        window.alphaValue = WindowOpacity.normalized(transparency)
     }
 
     func applyActivationPolicy() {

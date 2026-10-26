@@ -81,8 +81,8 @@ New tasks default to green. The UI shows a single color dot picker instead of wr
 ### Planning, Window Control, Persistence
 
 - Click the date header to open calendar planning; legacy unscheduled tasks are normalized to today.
-- Right-click the main window to change always-on-top, transparency, or widget mode.
-- Choose 100%, 80%, or 50% transparency levels.
+- Right-click the main window to change always-on-top, opacity, or widget mode.
+- Adjust window opacity from 50% to 100% in 1% steps using Settings → Opacity or the right-click Opacity popover. Changes apply immediately and persist after relaunch.
 - Open Settings (`Command + ,`) → Text Size to adjust task text from 85% to 160%; changes apply immediately and persist after relaunch.
 - SwiftData autosaves edits, app deactivation, and termination into the user's Application Support directory.
 
@@ -123,8 +123,8 @@ swift run EasyTODO
 4. Check a task to complete it; EasyTODO plays a sound and shows a small celebration.
 5. Open the desktop widget from the app menu, menu bar popover, or main window context menu when you want a smaller view.
 6. Use the native top-left window controls to close or minimize the main window. Closing keeps EasyTODO available in the menu bar; double-click its menu bar item to reopen the window.
-7. Right-click the window to change always-on-top, transparency, or widget mode.
-8. Open Settings to manage launch, menu bar, visibility, transparency, and theme.
+7. Right-click the window to change always-on-top, opacity, or widget mode.
+8. Open Settings to manage launch, menu bar, visibility, opacity, text size, and theme.
 
 ## Keyboard Shortcuts
 
@@ -145,7 +145,7 @@ swift run EasyTODO
 | Always on Top | On / Off |
 | Show in Menu Bar | On / Off |
 | Hide Dock Icon | On / Off when menu bar is enabled |
-| Transparency | 100%, 80%, 50% |
+| Window opacity | 50%–100% slider, adjustable in 1% steps |
 | Theme | Light, Dark |
 
 ## Project Structure
@@ -181,6 +181,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.10 | UI | Replace the three window-opacity presets with a live 50%–100% slider in Settings and a right-click popover; preserve custom values, including 90%, after relaunch. |
 | Local 1.0.9 | Fix | Show hover cards for fully visible short tasks in the main window and widget too; remove the truncation gate from the shared title component and cover the actual main-row and widget views with a regression test. |
 | Local 1.0.8 | UI | Add a persistent 85–160% text-size slider with a live preview and reset in Settings; resize task text, inline editing, input fields, hover cards, menu bar lists, and widgets together. |
 | Local 1.0.7 | UI | Enlarge priority controls to 32 × 28 points and palette choices to 32 × 32 points, add rounded-rectangle hover feedback, and keep a clear gap before the delete button without increasing task-row height. |

@@ -16,7 +16,7 @@ enum EasyTODOSettings {
             alwaysOnTop: true,
             showMenuBar: true,
             hiddenDockIcon: false,
-            transparency: 0.80,
+            transparency: WindowOpacity.defaultValue,
             widgetTransparency: 0.80,
             theme: ThemeOption.light.rawValue,
             textScale: TextSize.defaultScale
@@ -28,13 +28,25 @@ enum EasyTODOSettings {
             defaults.set(validTextScale, forKey: textScale)
         }
 
-        if abs(defaults.double(forKey: transparency) - 0.90) < 0.001 {
-            defaults.set(0.80, forKey: transparency)
+        let savedOpacity = defaults.double(forKey: transparency)
+        let validOpacity = WindowOpacity.normalized(savedOpacity)
+        if savedOpacity != validOpacity {
+            defaults.set(validOpacity, forKey: transparency)
         }
 
         if ThemeOption(rawValue: defaults.string(forKey: theme) ?? "") == nil {
             defaults.set(ThemeOption.light.rawValue, forKey: theme)
         }
+    }
+}
+
+enum WindowOpacity {
+    static let defaultValue = 0.80
+    static let range = 0.50...1.0
+
+    static func normalized(_ value: Double) -> Double {
+        guard value.isFinite else { return defaultValue }
+        return min(max(value, range.lowerBound), range.upperBound)
     }
 }
 
