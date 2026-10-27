@@ -17,7 +17,7 @@ final class TodoTask {
         isCompleted: Bool = false,
         sortOrder: Int = 0,
         createdAt: Date = .now,
-        scheduledDate: Date = .now,
+        scheduledDate: Date? = nil,
         priority: TaskPriority = .notUrgentImportant,
         repeatRule: TaskRepeatRule = .none,
         recurrenceGroupID: String? = nil
@@ -26,7 +26,8 @@ final class TodoTask {
         self.isCompleted = isCompleted
         self.sortOrder = sortOrder
         self.createdAt = createdAt
-        self.scheduledDate = Calendar.current.startOfDay(for: scheduledDate)
+        self.scheduledDate = scheduledDate.map { Calendar.current.startOfDay(for: $0) }
+            ?? TaskDayBoundary.current.day()
         self.priorityRawValue = priority.rawValue
         self.repeatRuleRawValue = repeatRule.rawValue
         self.recurrenceGroupID = recurrenceGroupID
@@ -51,7 +52,8 @@ final class TodoTask {
     }
 
     func scheduledDay(in calendar: Calendar = .current) -> Date {
-        calendar.startOfDay(for: scheduledDate ?? .now)
+        scheduledDate.map { calendar.startOfDay(for: $0) }
+            ?? TaskDayBoundary.current.day(calendar: calendar)
     }
 
     func isScheduled(on date: Date, calendar: Calendar = .current) -> Bool {

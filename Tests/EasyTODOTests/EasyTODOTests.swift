@@ -11,7 +11,7 @@ final class EasyTODOTests: XCTestCase {
         XCTAssertFalse(task.isCompleted)
         XCTAssertEqual(task.sortOrder, 2)
         XCTAssertEqual(task.priority, .notUrgentImportant)
-        XCTAssertTrue(task.isScheduled(on: .now))
+        XCTAssertTrue(task.isScheduled(on: TaskDayBoundary.current.day()))
     }
 
     func testTaskScheduledDateIsStoredAsStartOfDay() throws {

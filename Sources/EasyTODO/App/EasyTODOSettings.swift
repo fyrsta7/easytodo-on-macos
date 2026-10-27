@@ -9,6 +9,7 @@ enum EasyTODOSettings {
     static let widgetTransparency = "widgetTransparency"
     static let theme = "theme"
     static let textScale = "textScale"
+    static let dayBoundaryMinutes = "dayBoundaryMinutes"
 
     static func registerDefaults(in defaults: UserDefaults = .standard) {
         defaults.register(defaults: [
@@ -19,8 +20,15 @@ enum EasyTODOSettings {
             transparency: WindowOpacity.defaultValue,
             widgetTransparency: 0.80,
             theme: ThemeOption.light.rawValue,
-            textScale: TextSize.defaultScale
+            textScale: TextSize.defaultScale,
+            dayBoundaryMinutes: TaskDayBoundary.defaultMinutes
         ])
+
+        let savedBoundary = defaults.integer(forKey: dayBoundaryMinutes)
+        let validBoundary = TaskDayBoundary(minutes: savedBoundary).minutes
+        if savedBoundary != validBoundary {
+            defaults.set(validBoundary, forKey: dayBoundaryMinutes)
+        }
 
         let savedTextScale = defaults.double(forKey: textScale)
         let validTextScale = TextSize.normalized(savedTextScale)

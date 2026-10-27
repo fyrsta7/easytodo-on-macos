@@ -52,7 +52,7 @@ final class TaskReorderingTests: XCTestCase {
         }
         let reopened = try PersistenceController.modelContainer(storeURL: store)
         let tasks = try reopened.mainContext.fetch(FetchDescriptor<TodoTask>())
-        XCTAssertEqual(TaskListOrdering.ordered(tasks.filter { $0.isScheduled(on: .now) }).map(\.title), ["Second green", "First green"])
+        XCTAssertEqual(TaskListOrdering.ordered(tasks.filter { $0.isScheduled(on: TaskDayBoundary.current.day()) }).map(\.title), ["Second green", "First green"])
         XCTAssertEqual(tasks.first { $0.title == "Tomorrow" }?.sortOrder, 42)
     }
 

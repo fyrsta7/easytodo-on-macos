@@ -5,12 +5,16 @@ enum TaskCreation {
     @MainActor
     static func addTask(
         title: String,
-        scheduledDate: Date = .now,
+        scheduledDate: Date? = nil,
         in context: ModelContext,
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        now: Date = .now,
+        dayBoundary: TaskDayBoundary = .current
     ) throws -> TodoTask? {
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTitle.isEmpty else { return nil }
+
+        let scheduledDate = scheduledDate ?? dayBoundary.day(containing: now, calendar: calendar)
 
         let tasks = try context.fetch(FetchDescriptor<TodoTask>())
         let dayTasks = tasks.filter { task in

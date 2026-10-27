@@ -14,6 +14,7 @@ struct EasyTODOApp: App {
 
         do {
             modelContainer = try PersistenceController.modelContainer()
+            TaskDayClock.shared.configure(modelContainer: modelContainer)
             MenuBarManager.shared.configure(modelContainer: modelContainer)
             QuickAddPanelManager.shared.configure(modelContainer: modelContainer)
             WidgetWindowManager.shared.configure(modelContainer: modelContainer)

@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_NAME="EasyTODO"
 BUNDLE_ID="${BUNDLE_ID:-com.easytodo.EasyTODO}"
-VERSION="${VERSION:-1.0.15}"
+VERSION="${VERSION:-1.0.16}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
 CONFIGURATION="${CONFIGURATION:-release}"
 

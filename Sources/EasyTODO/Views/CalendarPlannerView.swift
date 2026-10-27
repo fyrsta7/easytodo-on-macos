@@ -25,7 +25,8 @@ struct CalendarPlannerView: View {
     @State private var newTaskTitle = ""
     @FocusState private var isAddingTaskFocused: Bool
 
-    private let calendar = Calendar.current
+    var dayClock = TaskDayClock.shared
+    private var calendar: Calendar { .autoupdatingCurrent }
     private let gridColumns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
     private let monthColumns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
 
@@ -73,7 +74,7 @@ struct CalendarPlannerView: View {
             Spacer()
 
             Button("Today") {
-                selectDate(.now, perspective: .day)
+                selectDate(dayClock.today, perspective: .day)
             }
             .controlSize(.small)
 
@@ -332,7 +333,7 @@ struct CalendarPlannerView: View {
     private func monthDayCell(for date: Date) -> some View {
         let tasks = tasks(on: date)
         let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
-        let isToday = calendar.isDateInToday(date)
+        let isToday = calendar.isDate(date, inSameDayAs: dayClock.today)
 
         return Button {
             selectDate(date, perspective: .day)
@@ -398,7 +399,7 @@ struct CalendarPlannerView: View {
     private func yearMonthCell(for month: Date) -> some View {
         let tasks = tasks(inMonth: month)
         let completed = tasks.filter(\.isCompleted).count
-        let isCurrentMonth = calendar.isDate(month, equalTo: .now, toGranularity: .month)
+        let isCurrentMonth = calendar.isDate(month, equalTo: dayClock.today, toGranularity: .month)
 
         return Button {
             visibleMonth = monthStart(for: month)
@@ -514,7 +515,7 @@ struct CalendarPlannerView: View {
     }
 
     private func dayTitle(for date: Date) -> String {
-        if calendar.isDateInToday(date) {
+        if calendar.isDate(date, inSameDayAs: dayClock.today) {
             return "Today"
         }
 
@@ -530,7 +531,7 @@ struct CalendarPlannerView: View {
     }
 
     private func shortDate(for date: Date) -> String {
-        if calendar.isDateInToday(date) {
+        if calendar.isDate(date, inSameDayAs: dayClock.today) {
             return "Today"
         }
 

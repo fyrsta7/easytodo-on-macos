@@ -82,6 +82,7 @@ New tasks default to green. The UI shows a single color dot picker instead of wr
 ### Planning, Window Control, Persistence
 
 - Click the date header to open calendar planning; legacy unscheduled tasks are normalized to today.
+- Settings → Day Boundary sets when a new task day begins (00:00–23:59, saved automatically; default 00:00). With 04:00, times before 04:00 belong to the previous date. Today lists, counts, Quick Add, and unfinished non-repeating task rollover follow this boundary, including after waking. Explicit calendar dates and existing task assignments remain unchanged when the setting changes. On daylight-saving transitions, a skipped time uses the next valid time and a repeated time uses its first occurrence.
 - Right-click the main window to change always-on-top, opacity, or widget mode.
 - Adjust window opacity from 50% to 100% in 1% steps using Settings → Opacity or the right-click Opacity popover. Changes apply immediately and persist after relaunch.
 - Open Settings (`Command + ,`) → Text Size to adjust task text from 85% to 160%; changes apply immediately and persist after relaunch.
@@ -184,6 +185,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.16 | Feature | Add a saved, minute-precise day boundary in Settings. Keep Today, quick add, menu bar counts, widget, calendar highlights, and unfinished-task rollover on the same task date; refresh at the boundary and after waking or clock changes without rewriting explicit dates. |
 | Local 1.0.15 | UI | Make menu bar priority dots clickable with a compact color picker and a larger invisible hit target. Save changes immediately, keep shared priority ordering, and hide task hover cards while choosing a color. |
 | Local 1.0.14 | UI | Restore compact 5-point priority dots beside the menu bar drag handles. Widen the popover from 260 to 400 points and increase its list-height limit from 220 to 320 points, with text-size scaling preserved. |
 | Local 1.0.13 | UI | Replace menu bar priority dots with drag handles and support native list reordering. Keep priority and completion groups, save the order within each group, and share it with the main window and widget. |

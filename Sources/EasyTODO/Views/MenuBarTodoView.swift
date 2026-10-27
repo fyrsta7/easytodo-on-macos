@@ -15,12 +15,12 @@ struct MenuBarTodoView: View {
     @State private var hoveredTaskID: PersistentIdentifier?
     @State private var priorityPickerTaskID: PersistentIdentifier?
 
-    private let calendar = Calendar.current
-    private let dayRefreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+    var dayClock = TaskDayClock.shared
+    private var calendar: Calendar { .autoupdatingCurrent }
 
     private var todayTasks: [TodoTask] {
         tasks.filter { task in
-            task.isScheduled(on: .now, calendar: calendar)
+            task.isScheduled(on: dayClock.today, calendar: calendar)
         }
     }
 
@@ -116,9 +116,6 @@ struct MenuBarTodoView: View {
         .onDisappear {
             hoveredTaskID = nil
             priorityPickerTaskID = nil
-        }
-        .onReceive(dayRefreshTimer) { _ in
-            runDailyTaskMaintenance()
         }
         .confirmationDialog(
             "Delete this task?",
@@ -307,8 +304,6 @@ struct MenuBarTodoView: View {
     }
 
     private func runDailyTaskMaintenance() {
-        if TaskDayMaintenance.rolloverUnfinishedTasksToToday(tasks, calendar: calendar) {
-            saveChanges()
-        }
+        dayClock.refresh(forceMaintenance: true)
     }
 }

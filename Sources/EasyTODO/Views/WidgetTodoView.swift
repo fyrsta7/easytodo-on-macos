@@ -13,12 +13,12 @@ struct WidgetTodoView: View {
     @AppStorage(EasyTODOSettings.theme) private var theme = ThemeOption.light.rawValue
     @AppStorage(EasyTODOSettings.widgetTransparency) private var widgetTransparency = 0.80
 
-    private let calendar = Calendar.current
-    private let dayRefreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+    var dayClock = TaskDayClock.shared
+    private var calendar: Calendar { .autoupdatingCurrent }
 
     private var todayTasks: [TodoTask] {
         tasks.filter { task in
-            task.isScheduled(on: .now, calendar: calendar)
+            task.isScheduled(on: dayClock.today, calendar: calendar)
         }
     }
 
@@ -67,9 +67,6 @@ struct WidgetTodoView: View {
         .shadow(color: .black.opacity(0.10), radius: 18, x: 0, y: 10)
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .onAppear(perform: runDailyTaskMaintenance)
-        .onReceive(dayRefreshTimer) { _ in
-            runDailyTaskMaintenance()
-        }
         .preferredColorScheme(preferredColorScheme)
     }
 
@@ -244,9 +241,7 @@ struct WidgetTodoView: View {
     }
 
     private func runDailyTaskMaintenance() {
-        if TaskDayMaintenance.rolloverUnfinishedTasksToToday(tasks, calendar: calendar) {
-            saveChanges()
-        }
+        dayClock.refresh(forceMaintenance: true)
     }
 
     private var preferredColorScheme: ColorScheme? {

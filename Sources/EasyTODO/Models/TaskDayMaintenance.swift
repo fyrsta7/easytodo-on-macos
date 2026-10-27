@@ -5,7 +5,7 @@ enum TaskDayMaintenance {
     @MainActor
     static func rolloverUnfinishedTasksToToday(
         in context: ModelContext,
-        today: Date = .now,
+        today: Date? = nil,
         calendar: Calendar = .current
     ) throws -> Bool {
         let tasks = try context.fetch(FetchDescriptor<TodoTask>())
@@ -20,15 +20,20 @@ enum TaskDayMaintenance {
 
     static func rolloverUnfinishedTasksToToday(
         _ tasks: [TodoTask],
-        today: Date = .now,
+        today: Date? = nil,
         calendar: Calendar = .current
     ) -> Bool {
-        let todayStart = calendar.startOfDay(for: today)
+        let todayStart = today.map { calendar.startOfDay(for: $0) }
+            ?? TaskDayBoundary.current.day(calendar: calendar)
+        var didChange = false
+        for task in tasks where task.scheduledDate == nil {
+            task.scheduledDate = todayStart
+            didChange = true
+        }
         var nextSortOrder = (tasks
             .filter { $0.isScheduled(on: todayStart, calendar: calendar) }
             .map(\.sortOrder)
             .max() ?? -1) + 1
-        var didChange = false
 
         let overdueTasks = tasks
             .filter { task in

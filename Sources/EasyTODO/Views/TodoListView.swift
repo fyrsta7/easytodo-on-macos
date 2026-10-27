@@ -16,7 +16,7 @@ struct TodoListView: View {
     @AppStorage(EasyTODOSettings.showMenuBar) private var showMenuBar = true
     @AppStorage(EasyTODOSettings.transparency) private var transparency = 0.80
 
-    @State private var selectedDate = Date()
+    @State private var selectedDate: Date
     @State private var isCalendarPresented = false
     @State private var isHeaderQuickAddPresented = false
     @State private var isOpacityPresented = false
@@ -24,8 +24,13 @@ struct TodoListView: View {
     @State private var undoKeyMonitor: Any?
     @State private var fireworksTrigger = 0
 
-    private let calendar = Calendar.current
-    private let dayRefreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+    let dayClock: TaskDayClock
+    private var calendar: Calendar { .autoupdatingCurrent }
+
+    init(dayClock: TaskDayClock = .shared) {
+        self.dayClock = dayClock
+        _selectedDate = State(initialValue: dayClock.today)
+    }
 
     private var completedCount: Int {
         displayedTasks.filter(\.isCompleted).count
@@ -44,7 +49,7 @@ struct TodoListView: View {
     }
 
     private var headerTitle: String {
-        if calendar.isDateInToday(selectedDate) {
+        if calendar.isDate(selectedDate, inSameDayAs: dayClock.today) {
             return "Today's TODOs"
         }
 
@@ -210,8 +215,10 @@ struct TodoListView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
             saveChanges()
         }
-        .onReceive(dayRefreshTimer) { _ in
-            runDailyTaskMaintenance()
+        .onChange(of: dayClock.today) { oldDay, newDay in
+            if calendar.isDate(selectedDate, inSameDayAs: oldDay) {
+                selectedDate = newDay
+            }
         }
         .onChange(of: alwaysOnTop) { _, _ in
             WindowManager.shared.applyWindowSettings()
@@ -451,31 +458,11 @@ struct TodoListView: View {
     }
 
     private func runDailyTaskMaintenance() {
-        let today = calendar.startOfDay(for: .now)
-        var didChange = false
-
-        for task in tasks where task.scheduledDate == nil {
-            task.scheduledDate = today
-            didChange = true
-        }
-
-        didChange = TaskDayMaintenance.rolloverUnfinishedTasksToToday(
-            tasks,
-            today: today,
-            calendar: calendar
-        ) || didChange
-
-        if selectedDate < today {
-            selectedDate = today
-        }
-
-        if didChange {
-            saveChanges()
-        }
+        dayClock.refresh(forceMaintenance: true)
     }
 
     private func shortDate(for date: Date) -> String {
-        if calendar.isDateInToday(date) {
+        if calendar.isDate(date, inSameDayAs: dayClock.today) {
             return "Today"
         }
 
