@@ -72,9 +72,9 @@ New tasks default to green. The UI shows a single color dot picker instead of wr
 
 ![Menu Bar demo](docs/assets/menu-bar-demo.gif)
 
-- Show today's progress in the macOS menu bar, such as `2 / 5`, and open a compact task popover.
+- Show today's progress in the macOS menu bar, such as `2 / 5`, and open a roomy task popover with a 400-point base width and up to 320 points of list height.
 - Click the completion circle directly in the menu bar popover without opening the full app.
-- Drag the left-hand handle in the menu bar list to reorder tasks within the same priority and completion group. The saved order is shared with the main list and widget; priority colors are hidden in the menu bar only.
+- Drag the left-hand handle in the menu bar list to reorder tasks within the same priority and completion group. The saved order is shared with the main list and widget; compact priority dots sit beside the drag handles.
 - Hover over task titles in the main window, menu bar, or widget to read the same opaque, wrapping preview card, including short titles that already fit. The menu bar also responds across the whole task row.
 - Open a draggable desktop widget from the app menu, menu bar popover, or main window context menu.
 - The widget floats above the desktop, joins all Spaces, shows active/done counts, and opens the full app when its header is double-clicked.
@@ -184,6 +184,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.14 | UI | Restore compact 5-point priority dots beside the menu bar drag handles. Widen the popover from 260 to 400 points and increase its list-height limit from 220 to 320 points, with text-size scaling preserved. |
 | Local 1.0.13 | UI | Replace menu bar priority dots with drag handles and support native list reordering. Keep priority and completion groups, save the order within each group, and share it with the main window and widget. |
 | Local 1.0.12 | UI | Double-click task text in the main list, menu bar, or widget to edit in a focused multiline popover with Save/Cancel and keyboard shortcuts. Keep drafts until explicit save, reject blank titles, and separate completion circles from editable text. The main row’s Edit menu uses the same editor. |
 | Local 1.0.11 | Fix | Keep one main task window with a singleton SwiftUI scene; reopening restores the existing window instead of requesting another, including when Settings or the widget is already visible. Disable task-window tabbing. |

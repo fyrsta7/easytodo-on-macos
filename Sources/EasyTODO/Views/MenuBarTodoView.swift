@@ -109,7 +109,7 @@ struct MenuBarTodoView: View {
 
         }
         .padding(14)
-        .frame(width: TextSize.panelDimension(260, scale: textScale))
+        .frame(width: TextSize.panelDimension(400, scale: textScale))
         .contentShape(Rectangle())
         .onAppear(perform: runDailyTaskMaintenance)
         .onDisappear { hoveredTaskID = nil }
@@ -131,7 +131,7 @@ struct MenuBarTodoView: View {
     }
 
     private var taskListHeight: CGFloat {
-        min(CGFloat(orderedTasks.count) * (titleHeight + 6), TextSize.panelDimension(220, scale: textScale))
+        min(CGFloat(orderedTasks.count) * (titleHeight + 6), TextSize.panelDimension(320, scale: textScale))
     }
 
     private var titleHeight: CGFloat {
@@ -158,13 +158,20 @@ struct MenuBarTodoView: View {
     }
 
     private func menuTaskRow(_ task: TodoTask) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: "line.3.horizontal")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 18, height: titleHeight)
-                .contentShape(Rectangle())
-                .accessibilityLabel("Drag to reorder")
+        HStack(spacing: 5) {
+            HStack(spacing: 3) {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 18, height: titleHeight)
+                    .contentShape(Rectangle())
+                    .accessibilityLabel("Drag to reorder")
+
+                Circle()
+                    .fill(task.priority.color)
+                    .frame(width: 5, height: 5)
+                    .accessibilityHidden(true)
+            }
 
             Button {
                 toggleCompletion(for: task)
