@@ -42,10 +42,14 @@ struct WidgetTodoView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { WindowManager.shared.showMainWindow() }
             progressBar
 
             if todayTasks.isEmpty {
                 emptyState
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) { WindowManager.shared.showMainWindow() }
             } else {
                 taskList
             }
@@ -62,9 +66,6 @@ struct WidgetTodoView: View {
         }
         .shadow(color: .black.opacity(0.10), radius: 18, x: 0, y: 10)
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .onTapGesture(count: 2) {
-            WindowManager.shared.showMainWindow()
-        }
         .onAppear(perform: runDailyTaskMaintenance)
         .onReceive(dayRefreshTimer) { _ in
             runDailyTaskMaintenance()
@@ -130,7 +131,7 @@ struct WidgetTodoView: View {
         ScrollView(.vertical) {
             LazyVStack(spacing: 7) {
                 ForEach(orderedTasks) { task in
-                    taskButton(for: task)
+                    taskRow(for: task)
                 }
             }
             .padding(.trailing, 4)
@@ -182,36 +183,39 @@ struct WidgetTodoView: View {
         }
     }
 
-    private func taskButton(for task: TodoTask) -> some View {
-        Button {
-            toggleCompletion(for: task)
-        } label: {
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(task.priority.color)
-                    .frame(width: 7, height: 7)
+    private func taskRow(for task: TodoTask) -> some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(task.priority.color)
+                .frame(width: 7, height: 7)
 
+            Button {
+                toggleCompletion(for: task)
+            } label: {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: TextSize.scaled(13, by: textScale), weight: .semibold))
                     .foregroundStyle(task.isCompleted ? Color.accentColor : Color.secondary)
-
-                FloatingTaskTitle(
-                    title: task.title,
-                    isCompleted: task.isCompleted,
-                    fontSize: TextSize.scaled(13, by: textScale),
-                    fontWeight: .medium
-                )
-                .frame(maxWidth: .infinity, minHeight: TextSize.rowHeight(baseFontSize: 13, scale: textScale))
-
-                Spacer(minLength: 0)
+                    .frame(width: 24, height: 28)
+                    .contentShape(Rectangle())
             }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 7)
-            .background(.primary.opacity(task.isCompleted ? 0.018 : 0.032), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .buttonStyle(.plain)
+            .accessibilityLabel(task.isCompleted ? "Mark incomplete" : "Mark complete")
+
+            FloatingTaskTitle(
+                title: task.title,
+                isCompleted: task.isCompleted,
+                fontSize: TextSize.scaled(13, by: textScale),
+                fontWeight: .medium,
+                onEdit: { title in
+                    task.title = title
+                    saveChanges()
+                }
+            )
+            .frame(maxWidth: .infinity, minHeight: TextSize.rowHeight(baseFontSize: 13, scale: textScale))
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(task.title.isEmpty ? "Untitled task" : task.title)
-        .accessibilityValue(task.isCompleted ? "Completed" : "Not completed")
+        .padding(.horizontal, 9)
+        .padding(.vertical, 7)
+        .background(.primary.opacity(task.isCompleted ? 0.018 : 0.032), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private func toggleCompletion(for task: TodoTask) {

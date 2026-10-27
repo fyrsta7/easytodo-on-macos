@@ -100,7 +100,7 @@ final class WindowPresentationTests: XCTestCase {
         window.contentView = host
         window.orderFront(nil)
         let title = "这条中文待办需要完整显示，包括最后一段文字。"
-        titleView.update(title: title, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: true, onDoubleClick: nil)
+        titleView.update(title: title, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: true, onEdit: nil)
         let preview = try XCTUnwrap(window.childWindows?.first)
         XCTAssertTrue(preview.isVisible)
         XCTAssertEqual(preview.alphaValue, 1)
@@ -112,7 +112,7 @@ final class WindowPresentationTests: XCTestCase {
         XCTAssertEqual(label.stringValue, title)
         XCTAssertEqual(label.maximumNumberOfLines, 0)
         let largeFont = NSFont.systemFont(ofSize: TextSize.scaled(13, by: 1.6))
-        titleView.update(title: title, isCompleted: false, font: largeFont, isHovered: true, onDoubleClick: nil)
+        titleView.update(title: title, isCompleted: false, font: largeFont, isHovered: true, onEdit: nil)
         let enlargedPreview = try XCTUnwrap(window.childWindows?.first)
         let enlargedCard = try XCTUnwrap(enlargedPreview.contentView as? NSBox)
         let enlargedLabel = try XCTUnwrap(enlargedCard.contentView?.subviews.compactMap { $0 as? NSTextField }.first)
@@ -120,14 +120,14 @@ final class WindowPresentationTests: XCTestCase {
         XCTAssertEqual(enlargedLabel.font?.pointSize, largeFont.pointSize)
         XCTAssertGreaterThan(enlargedPreview.frame.height, preview.frame.height)
         XCTAssertEqual(window.childWindows?.count, 1)
-        titleView.update(title: title, isCompleted: false, font: largeFont, isHovered: false, onDoubleClick: nil)
+        titleView.update(title: title, isCompleted: false, font: largeFont, isHovered: false, onEdit: nil)
         XCTAssertFalse(enlargedPreview.isVisible)
         XCTAssertFalse(preview.isVisible)
         XCTAssertTrue(window.childWindows?.isEmpty ?? true)
 
         let shortTitle = "喝水"
         XCTAssertLessThan((shortTitle as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: 13)]).width, titleView.bounds.width)
-        titleView.update(title: shortTitle, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: true, onDoubleClick: nil)
+        titleView.update(title: shortTitle, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: true, onEdit: nil)
         let shortPreview = try XCTUnwrap(window.childWindows?.first)
         let shortCard = try XCTUnwrap(shortPreview.contentView as? NSBox)
         let shortLabel = try XCTUnwrap(shortCard.contentView?.subviews.compactMap { $0 as? NSTextField }.first)
@@ -136,7 +136,7 @@ final class WindowPresentationTests: XCTestCase {
         XCTAssertEqual(shortCard.fillColor, card.fillColor)
         XCTAssertEqual(shortCard.cornerRadius, card.cornerRadius)
         XCTAssertFalse(shortCard.isTransparent)
-        titleView.update(title: shortTitle, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: false, onDoubleClick: nil)
+        titleView.update(title: shortTitle, isCompleted: false, font: .systemFont(ofSize: 13), isHovered: false, onEdit: nil)
         XCTAssertFalse(shortPreview.isVisible)
         XCTAssertTrue(window.childWindows?.isEmpty ?? true)
     }

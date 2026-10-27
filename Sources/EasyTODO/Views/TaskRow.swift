@@ -13,9 +13,7 @@ struct TaskRow: View {
 
     @State private var isHoveringDelete = false
     @State private var isConfirmingDelete = false
-    @State private var isEditingTitle = false
-    @State private var draftTitle = ""
-    @State private var editFocusRequest = 0
+    @State private var titleEditor = TaskTitleEditorHandle()
     @State private var isMoveDatePresented = false
     @State private var moveDate = Date()
 
@@ -84,56 +82,25 @@ struct TaskRow: View {
         }
     }
 
-    @ViewBuilder
     private var titleContent: some View {
-        if isEditingTitle {
-            InlineTaskTitleTextField(
-                text: $draftTitle,
-                focusRequest: editFocusRequest,
-                fontSize: TextSize.scaled(15, by: textScale),
-                onCommit: commitTitleEdit,
-                onCancel: cancelTitleEdit
-            )
-            .frame(maxWidth: .infinity, minHeight: titleHeight)
-        } else {
-            FloatingTaskTitle(
-                title: task.title,
-                isCompleted: task.isCompleted,
-                fontSize: TextSize.scaled(15, by: textScale),
-                fontWeight: .regular,
-                onDoubleClick: beginTitleEdit
-            )
-            .frame(maxWidth: .infinity, minHeight: titleHeight)
-        }
-    }
-
-    private var titleHeight: CGFloat {
-        TextSize.rowHeight(baseFontSize: 15, scale: textScale)
-    }
-
-    private func beginTitleEdit() {
-        draftTitle = task.title
-        isEditingTitle = true
-        editFocusRequest += 1
-    }
-
-    private func commitTitleEdit() {
-        guard isEditingTitle else { return }
-
-        isEditingTitle = false
-        task.title = draftTitle
-        onUpdate()
-    }
-
-    private func cancelTitleEdit() {
-        isEditingTitle = false
-        draftTitle = task.title
+        FloatingTaskTitle(
+            title: task.title,
+            isCompleted: task.isCompleted,
+            fontSize: TextSize.scaled(15, by: textScale),
+            fontWeight: .regular,
+            editor: titleEditor,
+            onEdit: { title in
+                task.title = title
+                onUpdate()
+            }
+        )
+        .frame(maxWidth: .infinity, minHeight: TextSize.rowHeight(baseFontSize: 15, scale: textScale))
     }
 
     @ViewBuilder
     private var taskContextMenu: some View {
         Button {
-            beginTitleEdit()
+            titleEditor.beginEditing()
         } label: {
             Label("Edit", systemImage: "pencil")
         }
@@ -221,104 +188,6 @@ struct TaskRow: View {
         } set: { newPriority in
             task.priority = newPriority
             onUpdate()
-        }
-    }
-}
-
-private struct InlineTaskTitleTextField: NSViewRepresentable {
-    @Binding var text: String
-    let focusRequest: Int
-    let fontSize: CGFloat
-    var onCommit: () -> Void
-    var onCancel: () -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    func makeNSView(context: Context) -> NSTextField {
-        let textField = NSTextField()
-        textField.delegate = context.coordinator
-        textField.isBordered = false
-        textField.drawsBackground = false
-        textField.isEditable = true
-        textField.isEnabled = true
-        textField.isSelectable = true
-        textField.focusRingType = .none
-        textField.font = NSFont.systemFont(ofSize: fontSize, weight: .regular)
-        textField.usesSingleLineMode = true
-        textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        return textField
-    }
-
-    func updateNSView(_ nsView: NSTextField, context: Context) {
-        context.coordinator.parent = self
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .regular)
-        nsView.font = font
-        nsView.currentEditor()?.font = font
-
-        if nsView.stringValue != text {
-            nsView.stringValue = text
-            nsView.currentEditor()?.string = text
-        }
-
-        guard context.coordinator.lastFocusRequest != focusRequest else { return }
-
-        context.coordinator.lastFocusRequest = focusRequest
-        context.coordinator.focus(nsView)
-    }
-
-    final class Coordinator: NSObject, NSTextFieldDelegate {
-        var parent: InlineTaskTitleTextField
-        var lastFocusRequest = 0
-
-        init(_ parent: InlineTaskTitleTextField) {
-            self.parent = parent
-        }
-
-        func controlTextDidChange(_ notification: Notification) {
-            guard let textField = notification.object as? NSTextField else { return }
-
-            parent.text = textField.stringValue
-        }
-
-        func controlTextDidEndEditing(_ notification: Notification) {
-            DispatchQueue.main.async {
-                self.parent.onCommit()
-            }
-        }
-
-        func control(
-            _ control: NSControl,
-            textView: NSTextView,
-            doCommandBy commandSelector: Selector
-        ) -> Bool {
-            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                if let textField = control as? NSTextField {
-                    parent.text = textField.stringValue
-                }
-
-                parent.onCommit()
-                return true
-            }
-
-            if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
-                parent.onCancel()
-                return true
-            }
-
-            return false
-        }
-
-        func focus(_ textField: NSTextField) {
-            DispatchQueue.main.async {
-                guard let window = textField.window else { return }
-
-                NSApp.activate(ignoringOtherApps: true)
-                window.makeKeyAndOrderFront(nil)
-                window.makeFirstResponder(textField)
-                textField.selectText(nil)
-            }
         }
     }
 }

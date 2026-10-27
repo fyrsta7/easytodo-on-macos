@@ -54,7 +54,7 @@ Most todo apps make a simple thought feel like admin work: open a tab, pick a wo
 
 ### Organize, Prioritize, Complete
 
-- Add, complete, delete, reorder, restore, and double-click to edit tasks inline.
+- Add, complete, delete, reorder, restore, and double-click task text to open a focused, multiline editor in the main window, menu bar, or widget. Press Return or click Save to keep changes; Esc or Cancel discards them, and Shift-Return inserts a new line.
 - Completed tasks are separated from active tasks; newly completed tasks move to the top of the completed group.
 - Completion plays a system sound and shows a small fireworks effect.
 - Tasks use four clean priority colors while keeping the left row color strip visible.
@@ -73,10 +73,10 @@ New tasks default to green. The UI shows a single color dot picker instead of wr
 ![Menu Bar demo](docs/assets/menu-bar-demo.gif)
 
 - Show today's progress in the macOS menu bar, such as `2 / 5`, and open a compact task popover.
-- Toggle completion directly from the menu bar popover without opening the full app.
+- Click the completion circle directly in the menu bar popover without opening the full app.
 - Hover over task titles in the main window, menu bar, or widget to read the same opaque, wrapping preview card, including short titles that already fit. The menu bar also responds across the whole task row.
 - Open a draggable desktop widget from the app menu, menu bar popover, or main window context menu.
-- The widget floats above the desktop, joins all Spaces, shows active/done counts, and opens the full app on double-click.
+- The widget floats above the desktop, joins all Spaces, shows active/done counts, and opens the full app when its header is double-clicked.
 
 ### Planning, Window Control, Persistence
 
@@ -135,8 +135,9 @@ swift run EasyTODO
 | `Option + Command + N` | Fallback global Quick Add |
 | `Command + N` | Focus new task entry |
 | `Control + Z` | Undo last deleted task |
-| `Return` | Save active quick input |
-| `Esc` | Dismiss active quick input |
+| `Return` | Save active quick input or task edit |
+| `Shift + Return` | Insert a new line in the task editor |
+| `Esc` | Dismiss active quick input or cancel task edit |
 
 ## Settings
 
@@ -182,6 +183,7 @@ Reverse chronological history, based on Git commits.
 
 | Commit | Tag | Notes |
 | --- | --- | --- |
+| Local 1.0.12 | UI | Double-click task text in the main list, menu bar, or widget to edit in a focused multiline popover with Save/Cancel and keyboard shortcuts. Keep drafts until explicit save, reject blank titles, and separate completion circles from editable text. The main row’s Edit menu uses the same editor. |
 | Local 1.0.11 | Fix | Keep one main task window with a singleton SwiftUI scene; reopening restores the existing window instead of requesting another, including when Settings or the widget is already visible. Disable task-window tabbing. |
 | Local 1.0.10 | UI | Replace the three window-opacity presets with a live 50%–100% slider in Settings and a right-click popover; preserve custom values, including 90%, after relaunch. |
 | Local 1.0.9 | Fix | Show hover cards for fully visible short tasks in the main window and widget too; remove the truncation gate from the shared title component and cover the actual main-row and widget views with a regression test. |

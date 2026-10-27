@@ -7,7 +7,8 @@ struct FloatingTaskTitle: NSViewRepresentable {
     var fontSize: CGFloat = 15
     var fontWeight: NSFont.Weight = .regular
     var isHovered: Bool? = nil
-    var onDoubleClick: (() -> Void)?
+    var editor: TaskTitleEditorHandle?
+    var onEdit: ((String) -> Void)?
 
     func makeNSView(context: Context) -> FloatingTaskTitleView {
         let view = FloatingTaskTitleView()
@@ -16,21 +17,33 @@ struct FloatingTaskTitle: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: FloatingTaskTitleView, context: Context) {
+        editor?.titleView = nsView
         nsView.update(
-            title: title.isEmpty ? "Untitled task" : title,
+            title: title,
             isCompleted: isCompleted,
             font: .systemFont(ofSize: fontSize, weight: fontWeight),
             isHovered: isHovered,
-            onDoubleClick: onDoubleClick
+            onEdit: onEdit
         )
     }
 
     static func dismantleNSView(_ nsView: FloatingTaskTitleView, coordinator: ()) {
         nsView.hidePanel()
+        nsView.closeEditor()
     }
 }
 
-final class FloatingTaskTitleView: NSView {
+@MainActor
+final class TaskTitleEditorHandle {
+    weak var titleView: FloatingTaskTitleView?
+
+    func beginEditing() {
+        // A menu action can run before AppKit has finished restoring the key window.
+        DispatchQueue.main.async { [weak self] in self?.titleView?.beginEditing() }
+    }
+}
+
+final class FloatingTaskTitleView: NSView, NSPopoverDelegate {
     private let label = NSTextField(labelWithString: "")
     private var trackingArea: NSTrackingArea?
     private var panel: NSPanel?
@@ -38,7 +51,8 @@ final class FloatingTaskTitleView: NSView {
     private var font = NSFont.systemFont(ofSize: 15, weight: .regular)
     private var hoverOverride: Bool?
     private var isMouseInside = false
-    private var onDoubleClick: (() -> Void)?
+    private var onEdit: ((String) -> Void)?
+    private(set) var editorPopover: NSPopover?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -66,6 +80,8 @@ final class FloatingTaskTitleView: NSView {
 
     override var acceptsFirstResponder: Bool { true }
 
+    override var mouseDownCanMoveWindow: Bool { false }
+
     override var intrinsicContentSize: NSSize {
         NSSize(width: NSView.noIntrinsicMetric, height: ceil(font.ascender - font.descender + font.leading))
     }
@@ -75,17 +91,17 @@ final class FloatingTaskTitleView: NSView {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        guard onDoubleClick != nil, super.hitTest(point) != nil else { return nil }
+        guard onEdit != nil, super.hitTest(point) != nil else { return nil }
         return self
     }
 
     override func mouseDown(with event: NSEvent) {
         if event.clickCount >= 2 {
-            hidePanel()
-            onDoubleClick?()
+            beginEditing()
             return
         }
-        super.mouseDown(with: event)
+        // Consume the first click too, so List selection/window dragging cannot steal the double-click.
+        window?.makeFirstResponder(self)
     }
 
     override func updateTrackingAreas() {
@@ -136,7 +152,7 @@ final class FloatingTaskTitleView: NSView {
         isCompleted: Bool,
         font: NSFont,
         isHovered: Bool?,
-        onDoubleClick: (() -> Void)?
+        onEdit: ((String) -> Void)?
     ) {
         if self.title != title || self.font != font {
             hidePanel()
@@ -144,9 +160,9 @@ final class FloatingTaskTitleView: NSView {
         self.title = title
         self.font = font
         hoverOverride = isHovered
-        self.onDoubleClick = onDoubleClick
+        self.onEdit = onEdit
 
-        label.attributedStringValue = NSAttributedString(string: title, attributes: [
+        label.attributedStringValue = NSAttributedString(string: title.isEmpty ? "Untitled task" : title, attributes: [
             .font: font,
             .foregroundColor: isCompleted ? NSColor.secondaryLabelColor : NSColor.labelColor,
             .strikethroughStyle: isCompleted ? NSUnderlineStyle.single.rawValue : 0,
@@ -158,9 +174,39 @@ final class FloatingTaskTitleView: NSView {
         updatePreview()
     }
 
+    func beginEditing() {
+        guard editorPopover == nil, onEdit != nil, window != nil else { return }
+        hidePanel()
+        let popover = NSPopover()
+        popover.behavior = .semitransient
+        popover.animates = false
+        popover.delegate = self
+        popover.contentViewController = TaskTitleEditorController(
+            title: title,
+            font: font,
+            onSave: { [weak self] title in
+                self?.onEdit?(title)
+                self?.closeEditor()
+            },
+            onCancel: { [weak self] in self?.closeEditor() }
+        )
+        editorPopover = popover
+        popover.show(relativeTo: bounds, of: self, preferredEdge: .maxY)
+    }
+
+    func closeEditor() {
+        editorPopover?.close()
+        editorPopover = nil
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        editorPopover = nil
+        isMouseInside = false
+    }
+
     private func updatePreview() {
         // Every task uses the same hover card, whether or not its inline title fits.
-        guard hoverOverride ?? isMouseInside,
+        guard editorPopover == nil, hoverOverride ?? isMouseInside,
               let window, window.isVisible, !visibleRect.isEmpty else {
             hidePanel()
             return

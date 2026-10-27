@@ -106,9 +106,6 @@ struct MenuBarTodoView: View {
         .padding(14)
         .frame(width: TextSize.panelDimension(260, scale: textScale))
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
-            WindowManager.shared.showMainWindow()
-        }
         .onAppear(perform: runDailyTaskMaintenance)
         .onDisappear { hoveredTaskID = nil }
         .onReceive(dayRefreshTimer) { _ in
@@ -157,29 +154,33 @@ struct MenuBarTodoView: View {
 
     private func menuTaskRow(_ task: TodoTask) -> some View {
         HStack(spacing: 6) {
+            Circle()
+                .fill(task.priority.color)
+                .frame(width: 8, height: 8)
+
             Button {
                 toggleCompletion(for: task)
             } label: {
-                HStack {
-                    Circle()
-                        .fill(task.priority.color)
-                        .frame(width: 8, height: 8)
-
-                    Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(task.isCompleted ? Color.accentColor : Color.secondary)
-
-                    FloatingTaskTitle(
-                        title: task.title,
-                        isCompleted: task.isCompleted,
-                        fontSize: TextSize.scaled(13, by: textScale),
-                        fontWeight: .regular,
-                        isHovered: hoveredTaskID == task.persistentModelID
-                    )
-                    .frame(maxWidth: .infinity, minHeight: titleHeight)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(task.isCompleted ? Color.accentColor : Color.secondary)
+                    .frame(width: 24, height: 28)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(task.isCompleted ? "Mark incomplete" : "Mark complete")
+
+            FloatingTaskTitle(
+                title: task.title,
+                isCompleted: task.isCompleted,
+                fontSize: TextSize.scaled(13, by: textScale),
+                fontWeight: .regular,
+                isHovered: hoveredTaskID == task.persistentModelID,
+                onEdit: { title in
+                    task.title = title
+                    saveChanges()
+                }
+            )
+            .frame(maxWidth: .infinity, minHeight: titleHeight)
 
             Button {
                 requestDelete(task)
