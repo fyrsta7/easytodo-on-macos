@@ -11,6 +11,8 @@ final class TodoTask {
     var priorityRawValue: String?
     var repeatRuleRawValue: String?
     var recurrenceGroupID: String?
+    // A historical entry can produce one successor, even if that successor is later deleted.
+    var carriedForwardDate: Date?
 
     init(
         title: String,
@@ -20,7 +22,8 @@ final class TodoTask {
         scheduledDate: Date? = nil,
         priority: TaskPriority = .notUrgentImportant,
         repeatRule: TaskRepeatRule = .none,
-        recurrenceGroupID: String? = nil
+        recurrenceGroupID: String? = nil,
+        carriedForwardDate: Date? = nil
     ) {
         self.title = title
         self.isCompleted = isCompleted
@@ -31,6 +34,7 @@ final class TodoTask {
         self.priorityRawValue = priority.rawValue
         self.repeatRuleRawValue = repeatRule.rawValue
         self.recurrenceGroupID = recurrenceGroupID
+        self.carriedForwardDate = carriedForwardDate
     }
 
     var priority: TaskPriority {

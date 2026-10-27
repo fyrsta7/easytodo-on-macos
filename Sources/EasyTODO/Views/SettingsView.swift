@@ -39,7 +39,7 @@ struct SettingsView: View {
                     .environment(\.locale, Locale(identifier: "en_GB"))
                     .accessibilityIdentifier("dayBoundaryTime")
 
-                Text("每天 \(boundaryLabel) 开始新的一天；此前仍算前一天。用于今天的列表、快捷新增和未完成任务顺延，自动保存。")
+                Text("每天 \(boundaryLabel) 开始新的一天；此前仍算前一天。未完成的普通任务会复制到新一天，前一天的记录保留。时间设置自动保存。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

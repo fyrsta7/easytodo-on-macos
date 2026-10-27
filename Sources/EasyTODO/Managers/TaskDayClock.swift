@@ -48,8 +48,8 @@ final class TaskDayClock {
 
         if let modelContainer, dayChanged || forceMaintenance {
             do {
-                _ = try TaskDayMaintenance.rolloverUnfinishedTasksToToday(
-                    in: modelContainer.mainContext, today: newDay, calendar: calendar
+                _ = try TaskDayMaintenance.copyUnfinishedTasksToToday(
+                    in: modelContainer.mainContext, today: newDay, calendar: calendar, now: now
                 )
             } catch {
                 NSLog("EasyTODO failed to refresh task day: \(error)")

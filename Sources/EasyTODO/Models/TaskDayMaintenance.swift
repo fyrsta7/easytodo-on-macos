@@ -3,26 +3,13 @@ import SwiftData
 
 enum TaskDayMaintenance {
     @MainActor
-    static func rolloverUnfinishedTasksToToday(
+    static func copyUnfinishedTasksToToday(
         in context: ModelContext,
         today: Date? = nil,
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        now: Date = .now
     ) throws -> Bool {
         let tasks = try context.fetch(FetchDescriptor<TodoTask>())
-        let didChange = rolloverUnfinishedTasksToToday(tasks, today: today, calendar: calendar)
-
-        if didChange {
-            try context.save()
-        }
-
-        return didChange
-    }
-
-    static func rolloverUnfinishedTasksToToday(
-        _ tasks: [TodoTask],
-        today: Date? = nil,
-        calendar: Calendar = .current
-    ) -> Bool {
         let todayStart = today.map { calendar.startOfDay(for: $0) }
             ?? TaskDayBoundary.current.day(calendar: calendar)
         var didChange = false
@@ -37,7 +24,8 @@ enum TaskDayMaintenance {
 
         let overdueTasks = tasks
             .filter { task in
-                !task.isCompleted && task.repeatRule == .none && task.scheduledDay(in: calendar) < todayStart
+                !task.isCompleted && task.repeatRule == .none && task.carriedForwardDate == nil
+                    && task.scheduledDay(in: calendar) < todayStart
             }
             .sorted { lhs, rhs in
                 let lhsDay = lhs.scheduledDay(in: calendar)
@@ -55,10 +43,22 @@ enum TaskDayMaintenance {
             }
 
         for task in overdueTasks {
-            task.scheduledDate = todayStart
-            task.sortOrder = nextSortOrder
+            let copy = TodoTask(
+                title: task.title,
+                sortOrder: nextSortOrder,
+                createdAt: now,
+                scheduledDate: todayStart,
+                priority: task.priority
+            )
+            context.insert(copy)
+            // Save the marker and copy together. Past content, completion, date, and order stay intact.
+            task.carriedForwardDate = todayStart
             nextSortOrder += 1
             didChange = true
+        }
+
+        if didChange || context.hasChanges {
+            try context.save()
         }
 
         return didChange

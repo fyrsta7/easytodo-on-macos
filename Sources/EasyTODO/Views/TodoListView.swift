@@ -478,7 +478,7 @@ struct TodoListView: View {
     }
 }
 
-private struct DeletedTaskSnapshot {
+struct DeletedTaskSnapshot {
     let title: String
     let isCompleted: Bool
     let sortOrder: Int
@@ -487,6 +487,7 @@ private struct DeletedTaskSnapshot {
     let priority: TaskPriority
     let repeatRule: TaskRepeatRule
     let recurrenceGroupID: String?
+    let carriedForwardDate: Date?
 
     init(task: TodoTask, calendar: Calendar) {
         title = task.title
@@ -497,6 +498,7 @@ private struct DeletedTaskSnapshot {
         priority = task.priority
         repeatRule = task.repeatRule
         recurrenceGroupID = task.recurrenceGroupID
+        carriedForwardDate = task.carriedForwardDate
     }
 
     func task() -> TodoTask {
@@ -508,7 +510,8 @@ private struct DeletedTaskSnapshot {
             scheduledDate: scheduledDate,
             priority: priority,
             repeatRule: repeatRule,
-            recurrenceGroupID: recurrenceGroupID
+            recurrenceGroupID: recurrenceGroupID,
+            carriedForwardDate: carriedForwardDate
         )
     }
 }

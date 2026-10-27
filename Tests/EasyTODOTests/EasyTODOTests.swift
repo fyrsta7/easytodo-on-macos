@@ -219,7 +219,7 @@ final class EasyTODOTests: XCTestCase {
         }
     }
 
-    func testUnfinishedPastTasksRollOverToToday() throws {
+    func testUnfinishedPastTasksAreCopiedWithoutChangingHistory() throws {
         let calendar = Calendar.current
         let today = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 8, day: 5, hour: 9)))
         let yesterday = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 8, day: 4, hour: 9)))
@@ -227,15 +227,23 @@ final class EasyTODOTests: XCTestCase {
         let overdueTask = TodoTask(title: "Carry forward", sortOrder: 0, scheduledDate: yesterday)
         let completedPastTask = TodoTask(title: "Done yesterday", isCompleted: true, sortOrder: 1, scheduledDate: yesterday)
 
-        let didChange = TaskDayMaintenance.rolloverUnfinishedTasksToToday(
-            [todayTask, overdueTask, completedPastTask],
+        let container = try PersistenceController.modelContainer(inMemory: true)
+        let context = container.mainContext
+        for task in [todayTask, overdueTask, completedPastTask] { context.insert(task) }
+        let didChange = try TaskDayMaintenance.copyUnfinishedTasksToToday(
+            in: context,
             today: today,
             calendar: calendar
         )
 
         XCTAssertTrue(didChange)
-        XCTAssertTrue(overdueTask.isScheduled(on: today, calendar: calendar))
-        XCTAssertEqual(overdueTask.sortOrder, 3)
+        XCTAssertTrue(overdueTask.isScheduled(on: yesterday, calendar: calendar))
+        XCTAssertEqual(overdueTask.sortOrder, 0)
+        let allTasks = try context.fetch(FetchDescriptor<TodoTask>())
+        XCTAssertEqual(allTasks.count, 4)
+        let copy = try XCTUnwrap(allTasks.first { $0.title == "Carry forward" && $0 !== overdueTask })
+        XCTAssertTrue(copy.isScheduled(on: today, calendar: calendar))
+        XCTAssertEqual(copy.sortOrder, 3)
         XCTAssertTrue(completedPastTask.isScheduled(on: yesterday, calendar: calendar))
     }
 
@@ -246,8 +254,11 @@ final class EasyTODOTests: XCTestCase {
         let todayTask = TodoTask(title: "Today", scheduledDate: today)
         let futureTask = TodoTask(title: "Future", scheduledDate: tomorrow)
 
-        let didChange = TaskDayMaintenance.rolloverUnfinishedTasksToToday(
-            [todayTask, futureTask],
+        let container = try PersistenceController.modelContainer(inMemory: true)
+        let context = container.mainContext
+        for task in [todayTask, futureTask] { context.insert(task) }
+        let didChange = try TaskDayMaintenance.copyUnfinishedTasksToToday(
+            in: context,
             today: today,
             calendar: calendar
         )

@@ -117,7 +117,7 @@ final class TaskDayBoundaryTests: XCTestCase {
         XCTAssertEqual(first.scheduledDate, today)
     }
 
-    func testRolloverWaitsForBoundaryAndPersistsOnlyUnfinishedNonRepeatingTasks() throws {
+    func testCopyWaitsForBoundaryAndPersistsOnlyUnfinishedNonRepeatingTasks() throws {
         try withDefaults { defaults in
             defaults.set(240, forKey: EasyTODOSettings.dayBoundaryMinutes)
             let calendar = Calendar.current
@@ -141,17 +141,24 @@ final class TaskDayBoundaryTests: XCTestCase {
                 clock.configure(modelContainer: container, now: now)
                 XCTAssertEqual(unfinished.scheduledDate, yesterday)
                 clock.refresh(at: now.addingTimeInterval(60))
-                XCTAssertEqual(unfinished.scheduledDate, today)
+                XCTAssertEqual(unfinished.scheduledDate, yesterday)
+                let allTasks = try context.fetch(FetchDescriptor<TodoTask>())
+                let copies = allTasks.filter { $0.title == "Carry" && $0.isScheduled(on: today) }
+                XCTAssertEqual(copies.count, 1)
+                XCTAssertEqual(allTasks.count, 5)
                 XCTAssertEqual(completed.scheduledDate, yesterday)
                 XCTAssertEqual(recurring.scheduledDate, yesterday)
                 XCTAssertEqual(future.scheduledDate, today)
                 let order = unfinished.sortOrder
                 clock.refresh(at: now.addingTimeInterval(61), forceMaintenance: true)
                 XCTAssertEqual(unfinished.sortOrder, order)
+                XCTAssertEqual(try context.fetchCount(FetchDescriptor<TodoTask>()), 5)
             }
             let reopened = try PersistenceController.modelContainer(storeURL: store)
             let tasks = try reopened.mainContext.fetch(FetchDescriptor<TodoTask>())
-            XCTAssertEqual(tasks.first { $0.title == "Carry" }?.scheduledDate, today)
+            XCTAssertEqual(tasks.filter { $0.title == "Carry" }.count, 2)
+            XCTAssertEqual(tasks.filter { $0.title == "Carry" && $0.isScheduled(on: today) }.count, 1)
+            XCTAssertEqual(tasks.filter { $0.title == "Carry" && $0.isScheduled(on: yesterday) }.count, 1)
             XCTAssertEqual(tasks.first { $0.title == "Done" }?.scheduledDate, yesterday)
         }
     }
