@@ -67,14 +67,19 @@ struct MenuBarTodoView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                ScrollView(.vertical) {
-                    LazyVStack(alignment: .leading, spacing: 6) {
-                        ForEach(orderedTasks) { task in
-                            menuTaskRow(task)
-                        }
+                List {
+                    ForEach(orderedTasks) { task in
+                        menuTaskRow(task)
+                            .padding(.vertical, 3)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 2))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                     }
-                    .padding(.trailing, 2)
+                    .onMove(perform: moveTasks)
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .environment(\.defaultMinListRowHeight, titleHeight + 6)
                 .frame(height: taskListHeight)
                 .scrollIndicators(.automatic)
             }
@@ -154,9 +159,12 @@ struct MenuBarTodoView: View {
 
     private func menuTaskRow(_ task: TodoTask) -> some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(task.priority.color)
-                .frame(width: 8, height: 8)
+            Image(systemName: "line.3.horizontal")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 18, height: titleHeight)
+                .contentShape(Rectangle())
+                .accessibilityLabel("Drag to reorder")
 
             Button {
                 toggleCompletion(for: task)
@@ -207,6 +215,12 @@ struct MenuBarTodoView: View {
                 }
             }
         }
+    }
+
+    private func moveTasks(from source: IndexSet, to destination: Int) {
+        hoveredTaskID = nil
+        TaskListOrdering.moveTasks(from: source, to: destination, in: todayTasks)
+        saveChanges()
     }
 
     private func saveChanges() {
