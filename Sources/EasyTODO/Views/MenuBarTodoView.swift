@@ -13,6 +13,7 @@ struct MenuBarTodoView: View {
     @State private var isQuickAddPresented = false
     @State private var taskPendingDeletion: TodoTask?
     @State private var hoveredTaskID: PersistentIdentifier?
+    @State private var priorityPickerTaskID: PersistentIdentifier?
 
     private let calendar = Calendar.current
     private let dayRefreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
@@ -112,7 +113,10 @@ struct MenuBarTodoView: View {
         .frame(width: TextSize.panelDimension(400, scale: textScale))
         .contentShape(Rectangle())
         .onAppear(perform: runDailyTaskMaintenance)
-        .onDisappear { hoveredTaskID = nil }
+        .onDisappear {
+            hoveredTaskID = nil
+            priorityPickerTaskID = nil
+        }
         .onReceive(dayRefreshTimer) { _ in
             runDailyTaskMaintenance()
         }
@@ -167,10 +171,24 @@ struct MenuBarTodoView: View {
                     .contentShape(Rectangle())
                     .accessibilityLabel("Drag to reorder")
 
-                Circle()
-                    .fill(task.priority.color)
-                    .frame(width: 5, height: 5)
-                    .accessibilityHidden(true)
+                PriorityPicker(
+                    priority: Binding(
+                        get: { task.priority },
+                        set: { priority in
+                            task.priority = priority
+                            saveChanges()
+                        }
+                    ),
+                    isCompact: true,
+                    onPresentationChange: { isPresented in
+                        if isPresented {
+                            hoveredTaskID = nil
+                            priorityPickerTaskID = task.persistentModelID
+                        } else if priorityPickerTaskID == task.persistentModelID {
+                            priorityPickerTaskID = nil
+                        }
+                    }
+                )
             }
 
             Button {
@@ -189,7 +207,7 @@ struct MenuBarTodoView: View {
                 isCompleted: task.isCompleted,
                 fontSize: TextSize.scaled(13, by: textScale),
                 fontWeight: .regular,
-                isHovered: hoveredTaskID == task.persistentModelID,
+                isHovered: priorityPickerTaskID == nil && hoveredTaskID == task.persistentModelID,
                 onEdit: { title in
                     task.title = title
                     saveChanges()

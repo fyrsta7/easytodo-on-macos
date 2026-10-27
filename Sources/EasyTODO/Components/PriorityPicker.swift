@@ -2,6 +2,8 @@ import SwiftUI
 
 struct PriorityPicker: View {
     @Binding var priority: TaskPriority
+    var isCompact = false
+    var onPresentationChange: (Bool) -> Void = { _ in }
     @State private var isShowingPalette = false
     @State private var isHovering = false
     @State private var hoveredOption: TaskPriority?
@@ -10,16 +12,8 @@ struct PriorityPicker: View {
         Button {
             isShowingPalette.toggle()
         } label: {
-            Circle()
-                .fill(priority.color)
-                .frame(width: 12, height: 12)
-                .padding(6)
-                .overlay {
-                    Circle()
-                        .strokeBorder(priority.color.opacity(0.45), lineWidth: 1.5)
-                }
-                .shadow(color: priority.color.opacity(0.26), radius: 4, x: 0, y: 1)
-                .frame(width: 32, height: 28)
+            priorityIndicator
+                .frame(width: isCompact ? 20 : 32, height: 28)
                 .background {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .fill(priority.color.opacity(isHovering || isShowingPalette ? 0.14 : 0))
@@ -30,12 +24,18 @@ struct PriorityPicker: View {
         .fixedSize()
         .help("Change priority")
         .onHover { isHovering = $0 }
+        .onChange(of: isShowingPalette) { _, isPresented in
+            onPresentationChange(isPresented)
+        }
+        .onDisappear {
+            if isShowingPalette { onPresentationChange(false) }
+        }
         .popover(isPresented: $isShowingPalette, arrowEdge: .bottom) {
             HStack(spacing: 8) {
                 ForEach(TaskPriority.allCases) { option in
                     Button {
-                        priority = option
                         isShowingPalette = false
+                        priority = option
                     } label: {
                         Circle()
                             .fill(option.color)
@@ -78,5 +78,24 @@ struct PriorityPicker: View {
             .onDisappear { hoveredOption = nil }
         }
         .accessibilityLabel("Change priority color")
+    }
+
+    @ViewBuilder
+    private var priorityIndicator: some View {
+        if isCompact {
+            Circle()
+                .fill(priority.color)
+                .frame(width: 7, height: 7)
+        } else {
+            Circle()
+                .fill(priority.color)
+                .frame(width: 12, height: 12)
+                .padding(6)
+                .overlay {
+                    Circle()
+                        .strokeBorder(priority.color.opacity(0.45), lineWidth: 1.5)
+                }
+                .shadow(color: priority.color.opacity(0.26), radius: 4, x: 0, y: 1)
+        }
     }
 }
